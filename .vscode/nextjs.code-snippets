@@ -1,0 +1,39 @@
+{
+	"Next.js Functional Component Layout with TypeScript": {
+		"prefix": "nefclayout",
+		"body": [
+		  "import React from 'react';",
+		  "",
+		  "export default function ${1:ComponentName}({ children }: { children: React.ReactNode }) {",
+		  "  return (",
+		  "    <div>",
+		  "      <h1>Authentication Layout</h1>",
+		  "      <div>{children}</div>  {/* Nội dung của các trang con sẽ được render tại đây */}",
+		  "    </div>",
+		  "  );",
+		  "}"
+		],
+		"description": "Creates a React functional layout component with TypeScript"
+	  },
+  
+	"Next.js Async Function with Params": {
+	  "prefix": "neParamsFunc",
+	  "body": [
+		"export default async function ${1:FunctionName}({ params }: { params: { id: string } }) {",
+		"  const { id } = await params;",
+		"  return <h1>Product: {id}</h1>;",
+		"}"
+	  ],
+	  "description": "Creates an async function in Next.js that accepts params and destructures id."
+	},
+
+	"Next.js simple component": {
+		"prefix": "nec", 
+		"body": [
+			"export default function Login() {",
+    			" return <h1>Login Page</h1>;",
+			"}"
+		]
+	}
+}
+  
