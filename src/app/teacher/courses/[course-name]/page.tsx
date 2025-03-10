@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import CustomerView from './CustomerView';
 import ChaptersView from './ChaptersView';
 import ReviewsView from './ReviewsView';
+import CourseDetails from './CourseDetails';
 
 export default function Page() {
   const [activeTab, setActiveTab] = useState<string>('Reviews');
@@ -36,9 +37,7 @@ export default function Page() {
         {activeTab === 'Customer' && <CustomerView />}
         {activeTab === 'Chapters' && <ChaptersView />}
         {activeTab === 'Reviews' && <ReviewsView />}
-        {activeTab === 'Detail' && (
-          <div className="text-gray-500">Detail View (Chưa triển khai)</div>
-        )}
+        {activeTab === 'Detail' && <CourseDetails/>}
       </div>
     </div>
 
