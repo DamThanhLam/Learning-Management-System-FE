@@ -101,6 +101,7 @@ const CourseDetails: React.FC = () => {
                 Course Name
               </label>
               <input
+                placeholder="Enter course name"
                 type="text"
                 value={courseName}
                 onChange={(e) => setCourseName(e.target.value)}
@@ -140,6 +141,7 @@ const CourseDetails: React.FC = () => {
                   </>
                 )}
                 <input
+                  placeholder="Enter course name"
                   ref={fileInputRef}
                   type="file"
                   accept="image/jpeg, image/png"
@@ -160,6 +162,7 @@ const CourseDetails: React.FC = () => {
                 Course Price
               </label>
               <input
+                placeholder="Enter course price"
                 type="text"
                 value={coursePrice}
                 onChange={(e) => setCoursePrice(e.target.value)}
@@ -172,6 +175,7 @@ const CourseDetails: React.FC = () => {
                 Category
               </label>
               <input
+                placeholder="Enter category"
                 type="text"
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
@@ -182,6 +186,7 @@ const CourseDetails: React.FC = () => {
             <div className="mb-4">
               <label className="block text-sm font-medium mb-1">Level</label>
               <select
+                title="Select level"
                 value={level}
                 onChange={(e) => setLevel(e.target.value)}
                 className="w-full border p-2 rounded"

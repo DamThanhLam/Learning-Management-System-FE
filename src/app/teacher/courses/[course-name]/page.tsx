@@ -4,7 +4,7 @@ import CustomerView from './CustomerView';
 import ChaptersView from './ChaptersView';
 import ReviewsView from './ReviewsView';
 
-export default function page() {
+export default function Page() {
   const [activeTab, setActiveTab] = useState<string>('Reviews');
 
   return (

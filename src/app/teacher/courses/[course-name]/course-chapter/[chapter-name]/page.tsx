@@ -52,6 +52,7 @@ export default function ChapterManagement() {
               <label className="block text-sm font-medium text-gray-700">Title</label>
               <div className='relative'>
                 <input
+                  placeholder='Enter chapter title'
                   type="text"
                   className="mt-1 block w-full p-2 border border-gray-300 rounded  "
                   defaultValue="Chapter 1 - Introduction to Spring Boot"
@@ -64,6 +65,7 @@ export default function ChapterManagement() {
               <label className="block text-sm font-medium text-gray-700">Description</label>
               <div className='relative'>
                 <textarea
+                  placeholder='Enter chapter'
                   className="mt-1 block w-full p-2 border border-gray-300 rounded"
                   rows={4}
                 ></textarea>
