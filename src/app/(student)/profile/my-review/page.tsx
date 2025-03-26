@@ -1,19 +1,20 @@
-// app/profile/my-courses/page.tsx
+// app/profile/my-reviews/page.tsx
 "use client";
 
-import CourseCard from "@/components/student/profile/CourseCard";
 import { useState } from "react";
+import ReviewCard from "@/components/student/profile/ReviewCard";
 
-const mockCourses = Array.from({ length: 9 }, (_, i) => ({
+const mockReviews = Array.from({ length: 9 }, (_, i) => ({
   id: i,
-  title: "Beginner’s Guide to Design",
+  courseTitle: "Beginner’s Guide to Design",
   author: "Ronald Richards",
   rating: 5,
   ratingCount: 1200,
-  imageUrl: "/course-thumb.jpg", // Add a sample image to public folder
+  imageUrl: "/course-thumb.jpg",
+  reviewText: "This course was incredibly helpful for beginners like me. Highly recommend it!",
 }));
 
-export default function MyCoursesPage() {
+export default function MyReviewsPage() {
   const [search, setSearch] = useState("");
 
   return (
@@ -21,13 +22,13 @@ export default function MyCoursesPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <h2 className="text-xl font-semibold">
-          Courses <span className="text-gray-500">(12)</span>
+          My Reviews <span className="text-gray-500">(12)</span>
         </h2>
         <div className="flex items-center gap-3 flex-wrap">
           <div className="relative">
             <input
               type="text"
-              placeholder="Search User"
+              placeholder="Search Reviews"
               className="pl-10 pr-4 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-300"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
@@ -38,20 +39,22 @@ export default function MyCoursesPage() {
           </div>
           <div className="flex items-center gap-2">
             <span className="text-sm text-gray-700">Sort By</span>
-            <select title="option" className="border rounded px-2 py-1 text-sm">
+            <select 
+            title="option"
+                className="border rounded px-2 py-1 text-sm">
               <option>Relevance</option>
               <option>Newest</option>
-              <option>Top Rated</option>
+              <option>Rating</option>
             </select>
             <button className="border px-3 py-1 rounded text-sm">⚙️ Filter</button>
           </div>
         </div>
       </div>
 
-      {/* Grid of courses */}
+      {/* Reviews Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        {mockCourses.map((course) => (
-          <CourseCard key={course.id} {...course} />
+        {mockReviews.map((review) => (
+          <ReviewCard key={review.id} {...review} />
         ))}
       </div>
 

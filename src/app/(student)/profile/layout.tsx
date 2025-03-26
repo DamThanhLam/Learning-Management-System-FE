@@ -1,10 +1,15 @@
-import React from 'react';
+// app/profile/layout.tsx
+import { ReactNode } from "react";
+import Sidebar from "@/components/student/profile/Sidebar";
 
-export default function ComponentName({ children }: { children: React.ReactNode }) {
+export default function ProfileLayout({ children }: { children: ReactNode }) {
   return (
-    <div>
-      <h1>General profile Layout</h1>
-      <div>{children}</div>  {/* Nội dung của các trang con sẽ được render tại đây */}
+    <div className="flex min-h-screen">
+      {/* Sidebar fixed width */}
+      <Sidebar />
+
+      {/* Content area takes remaining space */}
+      <div className="flex-1 p-8 overflow-x-hidden">{children}</div>
     </div>
   );
 }
