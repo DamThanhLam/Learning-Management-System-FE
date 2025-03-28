@@ -1,94 +1,94 @@
 "use client";
 
-import { useState } from "react";
-
-// Sample data
-const users = [
-  { name: "Andrew Bojangles", status: "Active", phone: "+10000010101", role: "Teacher", email: "dummy@gmail.com", activity: "2 days ago" },
-  { name: "Andrew Bojangles", status: "Active", phone: "+10000010101", role: "Teacher", email: "dummy@gmail.com", activity: "2 days ago" },
-  { name: "Andrew Bojangles", status: "Active", phone: "+10000010101", role: "Teacher", email: "dummy@gmail.com", activity: "2 days ago" },
-  { name: "Andrew Bojangles", status: "Active", phone: "+10000010101", role: "Teacher", email: "dummy@gmail.com", activity: "2 days ago" },
-];
-
-const UsersPage = () => {
-  const [statusFilter, setStatusFilter] = useState("All");
-  const [searchTerm, setSearchTerm] = useState("");
-
-  const filteredUsers = users.filter(
-    (user) => 
-      (statusFilter === "All" || user.status === statusFilter) &&
-      user.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+const TeacherApplication = () => {
+  const applications = [
+    {
+      applicant: "Andrew Bojangles",
+      email: "andrew@gmail.com",
+      submitted: "Feb 15, 2025",
+      expertise: "Software engineering",
+      status: "Pending",
+    },
+    {
+      applicant: "Andrew Bojangles",
+      email: "andrew@gmail.com",
+      submitted: "Feb 25, 2025",
+      expertise: "Software engineering",
+      status: "Approved",
+    },
+    {
+      applicant: "Andrew Bojangles",
+      email: "andrew@gmail.com",
+      submitted: "Feb 25, 2025",
+      expertise: "Software engineering",
+      status: "Rejected",
+    },
+  ];
 
   return (
-    <div className="min-h-screen flex flex-col px-6 py-6 bg-gray-100">
-      {/* Page Title */}
-      <h1 className="text-2xl font-semibold mb-6 text-gray-900">Users</h1>
-
-      {/* Header */}
-      <div className="flex justify-between items-center mb-8">
-        <div className="flex items-center space-x-4">
-          <span className="text-xl font-semibold text-gray-900">Company</span>
-          <div className="flex items-center space-x-2">
-            <div className="bg-gray-200 p-2 rounded-md text-center">
-              <span className="font-semibold text-sm">12</span>
-              <p className="text-xs">People</p>
-            </div>
-            <div className="bg-blue-200 p-2 rounded-md text-center">
-              <span className="font-semibold text-sm">5</span>
-              <p className="text-xs">Teachers</p>
-            </div>
-            <div className="bg-green-200 p-2 rounded-md text-center">
-              <span className="font-semibold text-sm">7</span>
-              <p className="text-xs">Students</p>
-            </div>
-          </div>
+    <div>
+      <h1 className="text-3xl font-bold mb-6">TEACHER APPLICATION</h1>
+      <div className="flex items-center mb-6">
+        <div className="relative w-64 flex-1">
+          <input
+            type="text"
+            placeholder="Search applicant"
+            className="w-full p-2 border rounded"
+          />
+          <span className="absolute right-2 top-2">🔍</span>
         </div>
-        <div className="flex items-center space-x-4">
-          <select
-            title="Filter by status"
-            className="p-2 border rounded-md text-sm"
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-          >
-            <option value="All">All status</option>
-            <option value="Active">Active</option>
-            <option value="Inactive">Inactive</option>
-          </select>
-          <div className="flex items-center border border-gray-300 p-2 rounded-lg">
-            <input
-              type="text"
-              placeholder="Search"
-              className="text-sm border-none outline-none"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-            <button className="ml-2 text-gray-500">Search</button>
-          </div>
-        </div>
+        <button className="ml-4 bg-blue-600 text-white px-4 py-2 rounded">
+          Search
+        </button>
       </div>
-
-      {/* Users Table */}
-      <table className="min-w-full table-auto text-sm">
+      <div className="flex space-x-4 mb-4">
+        <select className="p-2 border rounded">
+          <option>ALL</option>
+        </select>
+        <select className="p-2 border rounded">
+          <option>ALL STATUS</option>
+        </select>
+        <select className="p-2 border rounded">
+          <option>Activity: most recent</option>
+        </select>
+      </div>
+      <table className="w-full border-collapse">
         <thead>
-          <tr className="text-left border-b">
-            <th className="p-3 text-gray-600">User</th>
-            <th className="p-3 text-gray-600">Status</th>
-            <th className="p-3 text-gray-600">Phone number</th>
-            <th className="p-3 text-gray-600">Role</th>
-            <th className="p-3 text-gray-600">Email</th>
-            <th className="p-3 text-gray-600">Activity</th>
+          <tr className="border-b">
+            <th className="text-left p-2">Applicant</th>
+            <th className="text-left p-2">Submitted</th>
+            <th className="text-left p-2">Expertise</th>
+            <th className="text-left p-2">Status</th>
+            <th className="text-left p-2">Action</th>
           </tr>
         </thead>
         <tbody>
-          {filteredUsers.map((user, index) => (
-            <tr key={index} className="border-b hover:bg-gray-50">
-              <td className="p-3">{user.name}</td>
-              <td className="p-3">{user.status}</td>
-              <td className="p-3">{user.phone}</td>
-              <td className="p-3">{user.role}</td>
-              <td className="p-3">{user.email}</td>
-              <td className="p-3">{user.activity}</td>
+          {applications.map((app, index) => (
+            <tr key={index} className="border-b">
+              <td className="p-2">
+                <div>{app.applicant}</div>
+                <div className="text-gray-500">{app.email}</div>
+              </td>
+              <td className="p-2">{app.submitted}</td>
+              <td className="p-2">{app.expertise}</td>
+              <td className="p-2">
+                <span
+                  className={`px-3 py-1 rounded-full text-sm ${
+                    app.status === "Pending"
+                      ? "bg-yellow-100 text-yellow-800"
+                      : app.status === "Approved"
+                      ? "bg-green-100 text-green-800"
+                      : "bg-red-100 text-red-800"
+                  }`}
+                >
+                  {app.status}
+                </span>
+              </td>
+              <td className="p-2">
+                <button className="bg-blue-600 text-white px-4 py-1 rounded mr-2">
+                  Review
+                </button>
+              </td>
             </tr>
           ))}
         </tbody>
@@ -97,4 +97,4 @@ const UsersPage = () => {
   );
 };
 
-export default UsersPage;
+export default TeacherApplication;

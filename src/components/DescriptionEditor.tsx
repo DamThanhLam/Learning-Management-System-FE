@@ -1,11 +1,12 @@
 "use client";
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, DragEvent, ChangeEvent } from "react";
+import dynamic from "next/dynamic";
 import {
   useEditor,
   EditorContent,
   Extension,
   ReactNodeViewRenderer,
-  NodeViewWrapper,  
+  NodeViewWrapper,
 } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Underline from "@tiptap/extension-underline";

@@ -1,8 +1,10 @@
 // components/Sidebar.tsx
 import Link from "next/link";
 import { FaTachometerAlt, FaBook, FaDollarSign, FaCog } from "react-icons/fa";
-
-const Sidebar: React.FC = () => {
+interface SidebarProps {
+  pathname: string;
+}
+const Sidebar: React.FC<SidebarProps> = ({ pathname }) => {
   return (
     <div className="w-1/5 h-screen bg-gray-900 text-white flex flex-col justify-between">
       <div>

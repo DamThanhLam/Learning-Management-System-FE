@@ -10,6 +10,7 @@ const menuItems = [
   { name: "Student", href: "admin/users", icon: Users },
   { name: "Teacher", href: "admin/teachers", icon: FileText },
   { name: "Billing", href: "admin/teachers", icon: FilePlus },
+  { name: "Feedback", href: "admin/teachers", icon: FilePlus },
 ];
 
 export default function Layout({ children }: { children: ReactNode }) {
@@ -52,7 +53,7 @@ export default function Layout({ children }: { children: ReactNode }) {
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 p-6 bg-white rounded-lg shadow-md">
+      <main className="flex-1 bg-gray-100 rounded-lg shadow-md">
         {children}
       </main>
     </div>

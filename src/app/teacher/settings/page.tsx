@@ -23,7 +23,7 @@ export default function ProfilePage() {
   };
 
   return (
-    <div className="p-6 bg-gray-100 min-h-screen">
+    <div className="w-4/5 p-6 h-screen overflow-y-auto no-scrollbar">
       <h1 className="text-3xl font-bold">My profile</h1>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
         <div className="bg-white shadow-lg rounded-lg p-6">

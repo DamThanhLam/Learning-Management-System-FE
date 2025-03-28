@@ -5,7 +5,7 @@ import ChaptersView from './ChaptersView';
 import ReviewsView from './ReviewsView';
 import CourseDetails from './CourseDetails';
 
-export default function Page() {
+export default function page() {
   const [activeTab, setActiveTab] = useState<string>('Reviews');
 
   return (

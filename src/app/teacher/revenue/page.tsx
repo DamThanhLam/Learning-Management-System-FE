@@ -25,7 +25,7 @@ const chartData = {
 
 const Revenue = () => {
   return (
-    <div className="min-h-screen flex flex-col px-6 py-6 bg-gray-100">
+    <div className="w-4/5 p-6 h-screen overflow-y-auto no-scrollbar">
       {/* Page Title */}
       <h1 className="text-2xl font-semibold mb-6 text-gray-900">Revenue Analytics</h1>
 
