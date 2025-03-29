@@ -1,19 +1,12 @@
-// app/layout.tsx
-import "../globals.css";
-import { ReactNode } from "react";
 import Navbar from "@/components/student/Navbar";
 import Footer from "@/components/student/Footer";
 
-export default function RootLayout({ children }: { children: ReactNode }) {
+export default function StudentLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
-      <body className="bg-white text-gray-900">
-        <div className="min-h-screen flex flex-col">
-          <Navbar />
-          <main className="flex flex-1">{children}</main>
-          <Footer />
-        </div>
-      </body>
-    </html>
+    <div className="min-h-screen flex flex-col border border-indigo-600 text-sm">
+      <Navbar />
+      <main className="flex-1 w-full px-4 lg:px-6 py-4">{children}</main>
+      <Footer />
+    </div>
   );
 }

@@ -4,11 +4,11 @@ export default function Footer() {
     <footer className="bg-gray-900 text-white px-12 py-10 mt-8">
       <div className="grid grid-cols-4 gap-8">
         <div>
-          <h3 className="font-semibold text-lg mb-3">Byway</h3>
+          <h3 className="font-semibold text-lg mb-3">LMS</h3>
           <p className="text-sm leading-relaxed">
             Empowering learners through accessible and engaging online education.
             <br />
-            Byway is a leading online learning platform dedicated to providing high-quality,
+            LMS is a leading online learning platform dedicated to providing high-quality,
             flexible, and affordable educational experiences.
           </p>
         </div>
@@ -32,9 +32,9 @@ export default function Footer() {
         </div>
         <div>
           <h4 className="font-semibold mb-2">Contact Us</h4>
-          <p className="text-sm">123 Main Street, Anytown, CA 12345</p>
-          <p className="text-sm">Tel: +1 (123) 456-7890</p>
-          <p className="text-sm">Mail: bywayedu@webkul.in</p>
+          <p className="text-sm">12 Nguyen Van Bao, ward 1, Go Vap, Saigon, Vietnam</p>
+          <p className="text-sm">Tel: +84 0900000co</p>
+          <p className="text-sm">Mail: lmsedu@gmail.com</p>
           <div className="flex gap-3 mt-3 text-lg">
             <span>📘</span>
             <span>🟢</span>
