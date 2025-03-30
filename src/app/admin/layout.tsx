@@ -4,6 +4,8 @@ import { ReactNode } from "react";
 import Link from "next/link";
 import { Home, Users, FileText, FilePlus } from "lucide-react"; // Use lucide-react icons for the sidebar
 import Image from "next/image";
+import { useSelector } from "react-redux";
+import { RootState } from "@/store/store";
 
 const menuItems = [
   { name: "General", href: "admin/users", icon: Home },
@@ -14,6 +16,9 @@ const menuItems = [
 ];
 
 export default function Layout({ children }: { children: ReactNode }) {
+  const authentication = useSelector((state: RootState) => state.authentication);
+  if(!authentication.authentication || !authentication.user?.groups?.includes("ADMIN")) window.location.href="/login"
+
   return (
     <div className="flex min-h-screen bg-gray-100">
       {/* Sidebar */}

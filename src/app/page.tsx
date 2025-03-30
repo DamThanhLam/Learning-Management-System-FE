@@ -8,7 +8,7 @@ import { decrement, increment } from "@/store/slice/slice";
 export default function Home() {
   const count = useSelector((state: RootState) => state.counter.value);
   const dispatch = useDispatch();
-
+  
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-100">
       <div className="text-center p-6 bg-white rounded-lg shadow-lg">
