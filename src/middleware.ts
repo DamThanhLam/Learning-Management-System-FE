@@ -6,29 +6,39 @@ export async function middleware(req: NextRequest) {
   const currentPath = req.nextUrl.pathname;
   const refeshToken = req.cookies.get("refresh_token")?.value;
   const pathParts = currentPath.split("/").filter(part => part !== "");
+  const publicPaths = ["/login", "/register"];
+  console.log("token: " + token)
+  console.log("refeshToken: " + refeshToken)
+  if (!refeshToken && !token && publicPaths.includes(currentPath)) {
+    return NextResponse.next()
+  }
+
 
   try {
     // Gửi request đến Backend để kiểm tra tính hợp lệ của JWT
     const backendUrl = "http://localhost:8080/api/v1/user/verify-token";
-    if(!token && !refeshToken){
-      if(currentPath==="/login")  return NextResponse.next()
-      return NextResponse.redirect(new URL('/login', req.url))
-    }
-    const response = await fetch(backendUrl, {
+    const response = token && await fetch(backendUrl, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
       },
     });
-    console.log(response.status)
+    if (!token || !response || !response.ok) {
 
-    if (!response.ok) {
-      console.log("refeshToken: "+refeshToken)
-      if (!refeshToken && currentPath != "/login") return NextResponse.redirect(new URL('/login', req.url))
-      else if (!refeshToken && currentPath == "/login") {
-        return NextResponse.next()
+      if (!refeshToken && publicPaths.includes(currentPath)) {
+        const response = NextResponse.redirect(new URL('/login', req.url));
+        response.cookies.set("refresh_token", "", {
+          path: "/",
+          expires: new Date(Date.now() + 60 * 60 * 1000),
+        })
+        response.cookies.set("access_token", "", {
+          path: "/",
+          expires: new Date(Date.now() + 60 * 60 * 1000),
+        })
+        return response;
       }
+
       const refreshResponse = await fetch("http://localhost:8080/api/v1/user/refresh", {
         method: "GET",
         credentials: 'include',
@@ -36,17 +46,34 @@ export async function middleware(req: NextRequest) {
           Cookie: `refresh_token=${refeshToken}`,
         }
       });
+      console.log("AA")
+      console.log(refreshResponse.status)
 
       if (!refreshResponse.ok) {
-        return NextResponse.redirect(new URL('/login', req.url));  // Refresh token không thành công
+        const response = NextResponse.redirect(new URL('/login', req.url));
+        response.cookies.set("refresh_token", "", {
+          path: "/",
+          expires: new Date(Date.now() + 60 * 60 * 1000),
+        })
+        response.cookies.set("access_token", "", {
+          path: "/",
+          expires: new Date(Date.now() + 60 * 60 * 1000),
+        })
+        return response;  // Refresh token không thành công
       }
 
       const data = await refreshResponse.json();
 
       if (data.access_token) {
-        const response = NextResponse.next();
-        response.cookies.set('access_token', data.access_token);  // Cập nhật access_token mới
-        return NextResponse.redirect(new URL('/', req.url));;
+        const response = NextResponse.redirect(new URL('/', req.url));
+        response.cookies.set('access_token', data.access_token,
+          {
+            path: "/",
+            httpOnly: true,
+            expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+          }
+        );  // Cập nhật access_token mới
+        return response;
       } else {
         return NextResponse.redirect(new URL('/login', req.url));
       }
@@ -54,11 +81,17 @@ export async function middleware(req: NextRequest) {
     const responseData = (await response.json()).data;
 
 
-    console.log("pathParts" + pathParts)
-    console.log("responseData" + JSON.stringify(responseData))
     // Nếu đang truy cập `/login` hoặc `/register`, chuyển hướng về trang dashboard
     if (currentPath === "/login" || currentPath === "/register") {
-      return NextResponse.redirect(new URL("/", req.url));
+      const response = NextResponse.redirect(new URL("/", req.url));
+
+      response.cookies.set("groups", JSON.stringify(responseData.groups), {
+        path: "/",
+        httpOnly: false, // để JS có thể đọc
+        sameSite: "lax",
+      });
+
+      return response;
     }
     if (pathParts[0] === 'teacher' && !responseData.groups.includes("TEACHER")) {
       return NextResponse.redirect(new URL("/", req.url));
@@ -69,8 +102,14 @@ export async function middleware(req: NextRequest) {
     if (pathParts[0] === 'student' && !responseData.groups.includes("STUDENT")) {
       return NextResponse.redirect(new URL("/", req.url));
     }
+    const responseRedirect = NextResponse.next();
 
-    return NextResponse.next(); // Token hợp lệ, cho phép request tiếp tục
+    responseRedirect.cookies.set("groups", JSON.stringify(responseData.groups), {
+      path: "/",
+      httpOnly: false, // để JS có thể đọc
+      sameSite: "lax",
+    });
+    return responseRedirect; // Token hợp lệ, cho phép request tiếp tục
   } catch (error) {
     console.error("Lỗi khi xác thực JWT:", error);
     return NextResponse.redirect(new URL("/login", req.url));
@@ -78,6 +117,16 @@ export async function middleware(req: NextRequest) {
 }
 
 // Áp dụng middleware cho các route cụ thể
+// export const config = {
+//   matcher: ["/admin/:path*", "/teacher/:path*", "/student/:path*", "/login", "/register", "/:path*"],
+// };
 export const config = {
-  matcher: ["/admin/:path*", "/teacher/:path*", "/student/:path*", "/login", "/register"],
+  matcher: [
+    /**
+     * Bỏ qua:
+     *  - _next/static/ (file build)
+     *  - favicon.ico, .css, .js, .png, .jpg, .svg, .woff2, v.v...
+     */
+    "/((?!_next/static|favicon.ico|.*\\.(?:css|js|png|jpg|jpeg|svg|woff2|ttf|eot)).*)",
+  ],
 };
