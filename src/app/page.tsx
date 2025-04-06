@@ -1,36 +1,57 @@
-"use client";
+"use client"
 
-import React from "react";
-import { useSelector, useDispatch } from "react-redux";
-import { RootState } from "@/store/store";
-import { decrement, increment } from "@/store/slice/slice";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { motion } from "framer-motion";
+import { User, GraduationCap } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 
-export default function Home() {
-  const count = useSelector((state: RootState) => state.counter.value);
-  const dispatch = useDispatch();
-  
-  return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-100">
-      <div className="text-center p-6 bg-white rounded-lg shadow-lg">
-        <h1 className="text-2xl font-semibold mb-4">Counter App</h1>
-        <div className="flex justify-center space-x-4">
-          <button
-            aria-label="Increment value"
-            onClick={() => dispatch(increment())}
-            className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
-          >
-            Increment
-          </button>
-          <span className="text-xl font-bold">{count}</span>
-          <button
-            aria-label="Decrement value"
-            onClick={() => dispatch(decrement())}
-            className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600"
-          >
-            Decrement
-          </button>
+export default function RegisterChoice() {
+    const router = useRouter();
+   
+    return (
+        <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 p-6">
+            <h1 className="text-3xl font-bold text-gray-800 mb-6">Bắt đầu với</h1>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <motion.div whileHover={{ scale: 1.05 }}>
+                    <Card className="p-6 text-center cursor-pointer bg-white shadow-lg rounded-2xl border hover:shadow-2xl"
+                        onClick={() => router.push("/student")}
+                    >
+                        <CardContent className="flex flex-col items-center">
+                            <GraduationCap size={48} className="text-blue-500 mb-4" />
+                            <h2 className="text-xl font-semibold">Học sinh</h2>
+                            <p className="text-gray-600 mt-2">Tài khoản để học tập và phát triển.</p>
+                            <Button className="mt-4">Chọn</Button>
+                        </CardContent>
+                    </Card>
+                </motion.div>
+
+                <motion.div whileHover={{ scale: 1.05 }}>
+                    <Card className="p-6 text-center cursor-pointer bg-white shadow-lg rounded-2xl border hover:shadow-2xl"
+                        onClick={() => router.push("/teacher")}
+                    >
+                        <CardContent className="flex flex-col items-center">
+                            <User size={48} className="text-green-500 mb-4" />
+                            <h2 className="text-xl font-semibold">Giáo viên</h2>
+                            <p className="text-gray-600 mt-2">Khoản để giảng dạy và hướng dẫn.</p>
+                            <Button className="mt-4">Chọn</Button>
+                        </CardContent>
+                    </Card>
+                </motion.div>
+                <motion.div whileHover={{ scale: 1.05 }}>
+                    <Card className="p-6 text-center cursor-pointer bg-white shadow-lg rounded-2xl border hover:shadow-2xl"
+                        onClick={() => router.push("/admin")}
+                    >
+                        <CardContent className="flex flex-col items-center">
+                            <User size={48} className="text-green-500 mb-4" />
+                            <h2 className="text-xl font-semibold">Admin</h2>
+                            <p className="text-gray-600 mt-2">Khoản để quản lý</p>
+                            <Button className="mt-4">Chọn</Button>
+                        </CardContent>
+                    </Card>
+                </motion.div>
+            </div>
         </div>
-      </div>
-    </div>
-  );
+    );
 }

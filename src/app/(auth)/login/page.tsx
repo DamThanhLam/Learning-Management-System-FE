@@ -1,7 +1,7 @@
 "use client";
 
-import { login } from "@/store/slice/user";
-import { AppDispatch } from "@/store/store";
+import { BASE_URL_USER_SERVICE } from "@/utils/BaseURL";
+import encryptPassword from "@/utils/rsa";
 import { useState } from "react";
 import { useDispatch } from "react-redux";
 
@@ -10,11 +10,25 @@ const Login: React.FC = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [role, setRole] = useState("student");
-  const dispatch = useDispatch<AppDispatch>();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    dispatch(login({email,password}))
+    fetch(BASE_URL_USER_SERVICE+"/login",{
+      method:"POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({email, password: encryptPassword(password)}),
+      credentials: "include",
+    }).then(res => res.json())
+    .then(data=>{
+      console.log(data)
+      if(data.code === 200) window.location.href="/"
+      else alert("Error: "+data.message)
+    }).catch(e=>{
+      alert("Error: "+e)
+    })
+    
   };
 
   return (
