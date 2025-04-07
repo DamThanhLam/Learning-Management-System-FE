@@ -23,7 +23,9 @@ const Login: React.FC = () => {
     }).then(res => res.json())
     .then(data=>{
       console.log(data)
-      if(data.code === 200) window.location.href="/"
+      if(data.code === 200){
+        window.location.href="/"
+      }
       else alert("Error: "+data.message)
     }).catch(e=>{
       alert("Error: "+e)

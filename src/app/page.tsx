@@ -27,6 +27,7 @@ export default function RegisterChoice() {
                 console.error("Lỗi khi đọc cookie groups:", e);
             }
         }
+        
     }, []);
 
     return (

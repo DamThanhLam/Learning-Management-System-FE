@@ -2,6 +2,7 @@
 import React from 'react';
 import Table from '../../../../components/course/Table';
 import Pagination from '../../../../components/course/Pagination';
+import { useParams } from 'next/navigation';
 
 interface CustomerData {
   id: number;
@@ -54,6 +55,8 @@ const data: CustomerData[] = [
 ];
 
 export default function CustomerView() {
+  const params = useParams();
+  const courseId = params["course-id"] as string;
   return (
     <div>
       <Table columns={columns} data={data} />

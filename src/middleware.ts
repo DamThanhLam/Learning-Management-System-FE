@@ -19,9 +19,11 @@ export async function middleware(req: NextRequest) {
     const backendUrl = "http://localhost:8080/api/v1/user/verify-token";
     const response = token && await fetch(backendUrl, {
       method: "POST",
+      credentials: 'include',
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
+        Cookie: `access_token=${token}`,
+
       },
     });
     if (!token || !response || !response.ok) {
@@ -46,7 +48,6 @@ export async function middleware(req: NextRequest) {
           Cookie: `refresh_token=${refeshToken}`,
         }
       });
-      console.log("AA")
       console.log(refreshResponse.status)
 
       if (!refreshResponse.ok) {

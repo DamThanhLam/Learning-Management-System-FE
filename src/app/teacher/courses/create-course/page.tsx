@@ -1,99 +1,176 @@
 "use client";
-import React, { useState, useRef, DragEvent, ChangeEvent } from "react";
-
+import React, {
+  useState,
+  useRef,
+  DragEvent,
+  ChangeEvent,
+  FormEvent,
+  useEffect,
+} from "react";
 import DescriptionEditor from "@/components/DescriptionEditor";
+import { AiOutlineMinus, AiOutlinePlus } from "react-icons/ai";
+import { BASE_URL_COURSE_SERVICE } from "@/utils/BaseURL";
 
-// =====================================================
+const API_URL = "/api/courses";
 
 const CourseDetails: React.FC = () => {
-  // State cho form
-  const [courseName, setCourseName] = useState("Spring Boot");
-  const [coursePrice, setCoursePrice] = useState("$199.00");
-  const [category, setCategory] = useState("Java");
-  const [level, setLevel] = useState("Beginner");
+  // --- Form state ---
+  const [courseName, setCourseName] = useState("");
+  const [coursePrice, setCoursePrice] = useState("");
+  const [category, setCategory] = useState("");
+  const [level, setLevel] = useState("");
+  const [description, setDescription] = useState("");
+  const [addCategory, setAddCategory] = useState(false);
 
-  // State cho Upload Intro Image
+  // --- Intro Image ---
   const [introImage, setIntroImage] = useState<string | null>(null);
+  const [introImageFile, setIntroImageFile] = useState<File | null>(null);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const MAX_SIZE = 15 * 1024 * 1024; // 15MB
+  const MAX_IMAGE_SIZE = 5 * 1024 * 1024; // 5MB
 
-  // Xử lý drag & drop và file change
-  const handleDrop = (e: DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
+  // --- Intro Video ---
+  const [introVideo, setIntroVideo] = useState<string | null>(null);
+  const [introVideoFile, setIntroVideoFile] = useState<File | null>(null);
+  const [videoError, setVideoError] = useState<string | null>(null);
+  const videoInputRef = useRef<HTMLInputElement>(null);
+  const MAX_VIDEO_SIZE = 50 * 1024 * 1024; // 10MB
+  const ALLOWED_VIDEO_TYPES = ["video/mp4", "video/quicktime", "video/webm"];
+
+  // --- Validation errors ---
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [serverError, setServerError] = useState<string | null>(null);
+
+  // --- Handlers for Image ---
+  const handleImageFile = (file: File) => {
     setUploadError(null);
-    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-      const file = e.dataTransfer.files[0];
-      handleFile(file);
+    if (!["image/jpeg", "image/png"].includes(file.type)) {
+      setUploadError("Chỉ chấp nhận JPEG hoặc PNG.");
+      return;
+    }
+    if (file.size > MAX_IMAGE_SIZE) {
+      setUploadError("Kích thước tối đa 5MB.");
+      return;
+    }
+    setIntroImage(URL.createObjectURL(file));
+    setIntroImageFile(file);
+  };
+  const handleDropImage = (e: DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    if (e.dataTransfer.files.length > 0) {
+      handleImageFile(e.dataTransfer.files[0]);
       e.dataTransfer.clearData();
     }
   };
-
-  const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
-    setUploadError(null);
-    if (e.target.files && e.target.files.length > 0) {
-      const file = e.target.files[0];
-      handleFile(file);
-    }
+  const handleImageChange = (e: ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files?.length) handleImageFile(e.target.files[0]);
   };
 
-  const handleFile = (file: File) => {
-    // Kiểm tra định dạng
-    if (!["image/jpeg", "image/png"].includes(file.type)) {
-      setUploadError("Chỉ chấp nhận file JPEG hoặc PNG.");
+  // --- Handlers for Video ---
+  const handleVideoFile = (file: File) => {
+    setVideoError(null);
+    if (!ALLOWED_VIDEO_TYPES.includes(file.type)) {
+      setVideoError("Chỉ chấp nhận MP4, MOV, WEBM.");
       return;
     }
-    // Kiểm tra kích thước
-    if (file.size > MAX_SIZE) {
-      setUploadError("Kích thước file tối đa 15MB.");
+    if (file.size > MAX_VIDEO_SIZE) {
+      setVideoError("Kích thước tối đa 50MB.");
       return;
     }
-    // Tạo URL từ file
-    const imageURL = URL.createObjectURL(file);
-    setIntroImage(imageURL);
+    setIntroVideo(URL.createObjectURL(file));
+    setIntroVideoFile(file);
+  };
+  const handleDropVideo = (e: DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    if (e.dataTransfer.files.length > 0) {
+      handleVideoFile(e.dataTransfer.files[0]);
+      e.dataTransfer.clearData();
+    }
+  };
+  const handleVideoChange = (e: ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files?.length) handleVideoFile(e.target.files[0]);
   };
 
-  
+  // --- Submit handler ---
+  const handleSubmit = async (e: FormEvent) => {
+    e.preventDefault();
+    const newErrors: Record<string, string> = {};
 
-  // Lưu
-  const handleSave = () => {
-    
-    alert("Course details saved!");
-  };
+    // Validate
+    if (!courseName.trim()) newErrors.courseName = "Course name is required";
+    const priceNum = Number(coursePrice);
+    if (!coursePrice || isNaN(priceNum) || priceNum <= 0)
+      newErrors.coursePrice = "Enter a valid price > 0";
+    if (!category.trim()) newErrors.category = "Category is required";
+    if (!level.trim()) newErrors.level = "Level is required";
+    if (!description.trim())
+      newErrors.description = "Description is required";
+    if (!introImageFile) newErrors.introImage = "Intro image is required";
+    if (!introVideoFile) newErrors.introVideo = "Intro video is required";
 
-  // Publish
-  const handlePublish = () => {
-    console.log("Publishing course...");
-    alert("Course published!");
+    setErrors(newErrors);
+    if (Object.keys(newErrors).length > 0) return;
+
+    // Build FormData
+    const formData = new FormData();
+    formData.append("courseName", courseName);
+    formData.append("price", coursePrice);
+    formData.append("category", category);
+    formData.append("level", level);
+    formData.append("description", description);
+    if (introImageFile) formData.append("introImage", introImageFile);
+    if (introVideoFile) formData.append("introVideo", introVideoFile);
+
+    // POST to API
+    try {
+      const res = await fetch(BASE_URL_COURSE_SERVICE + "/add-course", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body: formData,
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.message || "Failed to create course");
+      }
+      alert("Course created successfully!");
+      // TODO: redirect or reset form
+    } catch (err: any) {
+      setServerError(err.message);
+    }
   };
 
   return (
-    // Thêm scroll ngoài cùng bằng cách dùng h-screen và overflow-y-auto
     <div className="flex h-screen overflow-y-auto no-scrollbar">
-
       <main className="flex-1 bg-gray-100 p-6">
+        {/* Header */}
         <div className="flex justify-between items-center mb-6">
-          <div className="flex items-center">
-            <button className="mr-2">⬅️ Back</button>
-          </div>
+          <button className="mr-2"
+            onClick={() => {
+              window.location.href = "/teacher/courses"
+            }
+            }
+          >⬅️ Back</button>
           <div>
             <button
-              onClick={handleSave}
-              className="bg-green-500 text-white px-4 py-2 rounded mr-2 hover:bg-green-600"
-            >
-              Save
-            </button>
-            <button
-              onClick={handlePublish}
-              className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+              onClick={handleSubmit}
+              className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
             >
               Publish
+            </button>
+            <button
+              onClick={handleSubmit}
+              className="bg-gray-700 text-white px-4 py-2 rounded hover:bg-blue-700 ml-10"
+            >
+              Draft
             </button>
           </div>
         </div>
 
-        <div className="flex">
-          {/* Left Section: Course Name, Upload Intro Image, Description */}
+        <form className="flex">
+          {/* Left */}
           <div className="w-3/4 bg-white p-6 rounded-lg shadow mr-6">
             {/* Course Name */}
             <div className="mb-4">
@@ -101,15 +178,17 @@ const CourseDetails: React.FC = () => {
                 Course Name
               </label>
               <input
-                placeholder="Enter course name"
                 type="text"
                 value={courseName}
                 onChange={(e) => setCourseName(e.target.value)}
                 className="w-full border p-2 rounded"
               />
+              {errors.courseName && (
+                <p className="text-red-500 text-sm">{errors.courseName}</p>
+              )}
             </div>
 
-            {/* Upload Intro Image */}
+            {/* Intro Image */}
             <div className="mb-4">
               <label className="block text-sm font-medium mb-1">
                 Upload Intro Image
@@ -117,87 +196,188 @@ const CourseDetails: React.FC = () => {
               <div
                 className="border-2 border-dashed border-gray-300 p-6 text-center rounded cursor-pointer"
                 onDragOver={(e) => e.preventDefault()}
-                onDrop={handleDrop}
+                onDrop={handleDropImage}
                 onClick={() => fileInputRef.current?.click()}
               >
                 {introImage ? (
                   <img
                     src={introImage}
-                    alt="Uploaded Intro"
+                    alt="Intro"
                     className="mx-auto max-h-48"
                   />
                 ) : (
                   <>
                     <p>
-                      Drag and drop files, or{" "}
+                      Drag & drop, or{" "}
                       <span className="text-blue-500 underline">Browse</span>
                     </p>
                     <p className="text-sm text-gray-500">
-                      Thumbnail in JPEG, PNG (largest 15M)
+                      JPEG, PNG (≤ 5MB)
                     </p>
-                    {uploadError && (
-                      <p className="text-sm text-red-500">{uploadError}</p>
-                    )}
                   </>
                 )}
-                <input
-                  placeholder="Enter course name"
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/jpeg, image/png"
-                  onChange={handleFileChange}
-                  className="hidden"
-                />
               </div>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/jpeg,image/png"
+                onChange={handleImageChange}
+                className="hidden"
+              />
+              {uploadError && (
+                <p className="text-red-500 text-sm">{uploadError}</p>
+              )}
+              {errors.introImage && (
+                <p className="text-red-500 text-sm">{errors.introImage}</p>
+              )}
+            </div>
+
+            {/* Intro Video */}
+            <div className="mb-4">
+              <label className="block text-sm font-medium mb-1">
+                Upload Intro Video
+              </label>
+              <div
+                className="border-2 border-dashed border-gray-300 p-6 text-center rounded cursor-pointer"
+                onDragOver={(e) => e.preventDefault()}
+                onDrop={handleDropVideo}
+                onClick={() => videoInputRef.current?.click()}
+              >
+                {introVideo ? (
+                  <video
+                    src={introVideo}
+                    controls
+                    className="mx-auto max-h-48"
+                  />
+                ) : (
+                  <>
+                    <p>
+                      Drag & drop, or{" "}
+                      <span className="text-blue-500 underline">Browse</span>
+                    </p>
+                    <p className="text-sm text-gray-500">
+                      MP4, MOV, WEBM (≤ 50MB)
+                    </p>
+                  </>
+                )}
+              </div>
+              <input
+                ref={videoInputRef}
+                type="file"
+                accept="video/mp4,video/quicktime,video/webm"
+                onChange={handleVideoChange}
+                className="hidden"
+              />
+              {videoError && (
+                <p className="text-red-500 text-sm">{videoError}</p>
+              )}
+              {errors.introVideo && (
+                <p className="text-red-500 text-sm">{errors.introVideo}</p>
+              )}
             </div>
 
             {/* Description */}
-            <DescriptionEditor/>
+            <div className="mb-4">
+
+              <DescriptionEditor
+                value={description}
+                onChange={setDescription}
+              />
+              {errors.description && (
+                <p className="text-red-500 text-sm">{errors.description}</p>
+              )}
+            </div>
           </div>
 
-          {/* Right Section: Price, Category, Level */}
+          {/* Right */}
           <div className="w-1/4 bg-white p-6 rounded-lg shadow">
+            {/* Price */}
             <div className="mb-4">
               <label className="block text-sm font-medium mb-1">
                 Course Price
               </label>
               <input
-                placeholder="Enter course price"
                 type="text"
                 value={coursePrice}
                 onChange={(e) => setCoursePrice(e.target.value)}
                 className="w-full border p-2 rounded"
               />
+              {errors.coursePrice && (
+                <p className="text-red-500 text-sm">{errors.coursePrice}</p>
+              )}
             </div>
 
+            {/* Category */}
             <div className="mb-4">
               <label className="block text-sm font-medium mb-1">
                 Category
               </label>
-              <input
-                placeholder="Enter category"
-                type="text"
-                value={category}
-                onChange={(e) => setCategory(e.target.value)}
-                className="w-full border p-2 rounded"
-              />
+              {!addCategory ? (
+                <div className="flex">
+                  <select
+                    value={category}
+                    onChange={(e) => setCategory(e.target.value)}
+                    className="w-full border p-2 rounded"
+                  >
+                    <option value="">-- Chọn category --</option>
+                    <option value="Java">Java</option>
+                    <option value="Programming">Programming</option>
+                    <option value="Python">Python</option>
+                  </select>
+                  <button
+                    type="button"
+                    className="px-2 py-2 bg-blue-500 text-white rounded-md flex items-center gap-2"
+                    onClick={() => setAddCategory(true)}
+                  >
+                    <AiOutlinePlus className="w-4 h-4" />
+                  </button>
+                </div>
+              ) : (
+                <div className="flex">
+                  <input
+                    type="text"
+                    placeholder="New category"
+                    value={category}
+                    onChange={(e) => setCategory(e.target.value)}
+                    className="w-full border p-2 rounded"
+                  />
+                  <button
+                    type="button"
+                    className="px-2 py-2 bg-blue-500 text-white rounded-md flex items-center"
+                    onClick={() => setAddCategory(false)}
+                  >
+                    <AiOutlineMinus className="w-4 h-4" />
+                  </button>
+                </div>
+              )}
+              {errors.category && (
+                <p className="text-red-500 text-sm">{errors.category}</p>
+              )}
             </div>
 
+            {/* Level */}
             <div className="mb-4">
               <label className="block text-sm font-medium mb-1">Level</label>
               <select
-                title="Select level"
                 value={level}
                 onChange={(e) => setLevel(e.target.value)}
                 className="w-full border p-2 rounded"
               >
+                <option value="">-- Chọn level --</option>
                 <option value="Beginner">Beginner</option>
                 <option value="Intermediate">Intermediate</option>
                 <option value="Advanced">Advanced</option>
               </select>
+              {errors.level && (
+                <p className="text-red-500 text-sm">{errors.level}</p>
+              )}
             </div>
+
+            {serverError && (
+              <p className="text-red-500 text-sm mt-4">{serverError}</p>
+            )}
           </div>
-        </div>
+        </form>
       </main>
     </div>
   );
