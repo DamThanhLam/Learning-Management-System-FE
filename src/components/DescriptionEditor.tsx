@@ -16,11 +16,16 @@ import Heading, { Level } from "@tiptap/extension-heading";
 import TextStyle from "@tiptap/extension-text-style";
 import Color from "@tiptap/extension-color";
 import { Node, mergeAttributes } from "@tiptap/core";
+import AttachDialog from "./AttachDialog";
+import { BASE_URL_COURSE_SERVICE } from "@/utils/BaseURL";
 export interface DescriptionEditorProps {
   value: string;
   onChange: (newValue: string) => void;
 }
-
+interface AddImageButtonProps {
+  editor: any; // Tùy theo editor bạn đang dùng (ví dụ: Tiptap Editor)
+}
+const MAX_IMAGE_SIZE = 5 * 1024 * 1024;
 // =========== Custom Resizable Image Extension =============
 const ResizableImageComponent = (props: any) => {
   const imgRef = useRef<HTMLImageElement>(null);
@@ -162,7 +167,8 @@ const DescriptionEditor: React.FC<DescriptionEditorProps> = ({
   value,
   onChange,
 }) => {
-
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const [isDialogOpen, setIsDialogOpen] = useState(false)
   // Khởi tạo editor với custom ResizableImage thay vì Image mặc định
   const editor = useEditor({
     extensions: [
@@ -193,21 +199,99 @@ const DescriptionEditor: React.FC<DescriptionEditorProps> = ({
   const unsetLink = () => {
     editor?.chain().focus().unsetLink().run();
   };
-
-  // Chèn ảnh (sử dụng custom resizableImage)
   const addImage = () => {
-    const url = prompt("Nhập URL ảnh:");
-    if (url) {
-      editor
-        ?.chain()
-        .focus()
-        .insertContent({
-          type: "resizableImage",
-          attrs: { src: url, width: 300 },
-        })
-        .run();
-    }
+    fileInputRef.current?.click();
   };
+  // // Chèn ảnh (sử dụng custom resizableImage)
+  // const addImage = () => {
+  //   const url = prompt("Nhập URL ảnh:");
+  //   if (url) {
+  //     editor
+  //       ?.chain()
+  //       .focus()
+  //       .insertContent({
+  //         type: "resizableImage",
+  //         attrs: { src: url, width: 300 },
+  //       })
+  //       .run();
+  //   }
+  // };
+
+  useEffect(() => {
+    const input = fileInputRef.current;
+    if (!input) return;
+
+    const handleFileChange = async (event: Event) => {
+      const target = event.target as HTMLInputElement;
+      const file = target.files?.[0];
+      if (!file) return;
+    
+      // ✅ Kiểm tra định dạng file
+      const allowedTypes = ["image/jpeg", "image/png"];
+      if (!allowedTypes.includes(file.type)) {
+        alert("Chỉ cho phép các định dạng ảnh: JPEG, PNG.");
+        target.value = "";
+        return;
+      }
+    
+      // ✅ Kiểm tra kích thước ảnh
+      const imageUrl = URL.createObjectURL(file);
+      const img = new Image();
+    
+      img.onload = async () => {
+        const { width, height } = img;
+    
+        if (file.size > MAX_IMAGE_SIZE) {
+          alert("Kích thước tối đa 5MB.");
+          return;
+        }
+        console.log("Sending file:", file.name);
+        console.log("Size:", file.size, "bytes");
+        console.log("Type:", file.type);
+        // ✅ Gửi ảnh lên server
+        const formData = new FormData();
+        formData.append("image", file);
+    
+        try {
+          const response = await fetch(BASE_URL_COURSE_SERVICE+"/add-image", {
+            method: "POST",
+            body: formData,
+            credentials:'include'
+          });
+    
+          const data = await response.json();
+          const uploadedUrl = data.url;
+    
+          if (uploadedUrl) {
+            editor
+              ?.chain()
+              .focus()
+              .insertContent({
+                type: "resizableImage",
+                attrs: { src: uploadedUrl, width: 300 },
+              })
+              .run();
+          }
+        } catch (error) {
+          console.error("Lỗi upload ảnh:", error);
+        }
+    
+        URL.revokeObjectURL(imageUrl);
+      };
+    
+      img.onerror = () => {
+        alert("File không phải ảnh hợp lệ.");
+        URL.revokeObjectURL(imageUrl);
+      };
+    
+      img.src = imageUrl;
+      target.value = "";
+    };
+    
+
+    input.addEventListener("change", handleFileChange);
+    return () => input.removeEventListener("change", handleFileChange);
+  }, [editor]);
 
   // Nếu parent truyền value mới (ví dụ reset), sync ngược lại editor
   useEffect(() => {
@@ -279,6 +363,7 @@ const DescriptionEditor: React.FC<DescriptionEditorProps> = ({
           />
 
           <button
+            type="button"
             onClick={() => editor?.chain().focus().toggleBold().run()}
             className={`px-2 py-1 border rounded ${editor?.isActive("bold") ? "bg-gray-200" : ""
               }`}
@@ -287,6 +372,7 @@ const DescriptionEditor: React.FC<DescriptionEditorProps> = ({
           </button>
 
           <button
+            type="button"
             onClick={() => editor?.chain().focus().toggleItalic().run()}
             className={`px-2 py-1 border rounded ${editor?.isActive("italic") ? "bg-gray-200" : ""
               }`}
@@ -295,6 +381,7 @@ const DescriptionEditor: React.FC<DescriptionEditorProps> = ({
           </button>
 
           <button
+            type="button"
             onClick={() => editor?.chain().focus().toggleUnderline().run()}
             className={`px-2 py-1 border rounded ${editor?.isActive("underline") ? "bg-gray-200" : ""
               }`}
@@ -303,6 +390,7 @@ const DescriptionEditor: React.FC<DescriptionEditorProps> = ({
           </button>
 
           <button
+            type="button"
             onClick={() =>
               editor?.chain().focus().toggleBulletList().run()
             }
@@ -313,6 +401,7 @@ const DescriptionEditor: React.FC<DescriptionEditorProps> = ({
           </button>
 
           <button
+            type="button"
             onClick={() =>
               editor?.chain().focus().toggleOrderedList().run()
             }
@@ -323,6 +412,7 @@ const DescriptionEditor: React.FC<DescriptionEditorProps> = ({
           </button>
 
           <button
+            type="button"
             onClick={() =>
               editor?.chain().focus().setTextAlign("left").run()
             }
@@ -335,6 +425,7 @@ const DescriptionEditor: React.FC<DescriptionEditorProps> = ({
           </button>
 
           <button
+            type="button"
             onClick={() =>
               editor?.chain().focus().setTextAlign("center").run()
             }
@@ -347,6 +438,7 @@ const DescriptionEditor: React.FC<DescriptionEditorProps> = ({
           </button>
 
           <button
+            type="button"
             onClick={() =>
               editor?.chain().focus().setTextAlign("right").run()
             }
@@ -359,6 +451,7 @@ const DescriptionEditor: React.FC<DescriptionEditorProps> = ({
           </button>
 
           <button
+            type="button"
             onClick={setLink}
             className="px-2 py-1 border rounded"
           >
@@ -366,18 +459,32 @@ const DescriptionEditor: React.FC<DescriptionEditorProps> = ({
           </button>
 
           <button
+            type="button"
             onClick={unsetLink}
             className="px-2 py-1 border rounded"
           >
             Unlink
           </button>
-
+          <input
+            type="file"
+            accept="image/*"
+            style={{ display: "none" }}
+            ref={fileInputRef}
+          />
           <button
+            type="button"
             onClick={addImage}
             className="px-2 py-1 border rounded"
           >
             🖼
           </button>
+          {/* <button
+            type="button"
+            onClick={() => setIsDialogOpen(true)}
+            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+          >
+            Open Attach Dialog
+          </button> */}
         </div>
 
         <div className="p-4 min-h-[150px] prose max-w-none list-inside">
@@ -387,6 +494,22 @@ const DescriptionEditor: React.FC<DescriptionEditorProps> = ({
           />
         </div>
       </div>
+      <AttachDialog
+        isOpen={isDialogOpen}
+        onClose={() => setIsDialogOpen(false)}
+        onSelect={(url) => {
+          editor
+            ?.chain()
+            .focus()
+            .insertContent({
+              type: "resizableImage",
+              attrs: { src: url, width: 300 },
+            })
+            .run();
+          setIsDialogOpen(false)
+
+        }}
+      />
     </div>
   );
 }

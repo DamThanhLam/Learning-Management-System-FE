@@ -14,6 +14,10 @@ import { BASE_URL_COURSE_SERVICE } from "@/utils/BaseURL";
 const API_URL = "/api/courses";
 
 const CourseDetails: React.FC = () => {
+
+  //initial
+  const [categories, setCategories] = useState([])
+
   // --- Form state ---
   const [courseName, setCourseName] = useState("");
   const [coursePrice, setCoursePrice] = useState("");
@@ -40,6 +44,15 @@ const CourseDetails: React.FC = () => {
   // --- Validation errors ---
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [serverError, setServerError] = useState<string | null>(null);
+
+  //initial
+  useEffect(() => {
+    fetch(BASE_URL_COURSE_SERVICE + "/get-all-categories", {
+      credentials: 'include',
+      method: "GET"
+    }).then(res => res.json())
+      .then(data => setCategories(data.data))
+  }, [])
 
   // --- Handlers for Image ---
   const handleImageFile = (file: File) => {
@@ -92,7 +105,7 @@ const CourseDetails: React.FC = () => {
   };
 
   // --- Submit handler ---
-  const handleSubmit = async (e: FormEvent) => {
+  const handleSubmit = async (e: FormEvent, status: string) => {
     e.preventDefault();
     const newErrors: Record<string, string> = {};
 
@@ -116,18 +129,16 @@ const CourseDetails: React.FC = () => {
     formData.append("courseName", courseName);
     formData.append("price", coursePrice);
     formData.append("category", category);
+    formData.append("status", status);
     formData.append("level", level);
     formData.append("description", description);
-    if (introImageFile) formData.append("introImage", introImageFile);
-    if (introVideoFile) formData.append("introVideo", introVideoFile);
+    if (introImageFile) formData.append("fileAvt", introImageFile);
+    if (introVideoFile) formData.append("videoIntro", introVideoFile);
 
     // POST to API
     try {
       const res = await fetch(BASE_URL_COURSE_SERVICE + "/add-course", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
         credentials: "include",
         body: formData,
       });
@@ -136,6 +147,7 @@ const CourseDetails: React.FC = () => {
         throw new Error(data.message || "Failed to create course");
       }
       alert("Course created successfully!");
+      window.location.href="/teacher/courses"
       // TODO: redirect or reset form
     } catch (err: any) {
       setServerError(err.message);
@@ -155,13 +167,13 @@ const CourseDetails: React.FC = () => {
           >⬅️ Back</button>
           <div>
             <button
-              onClick={handleSubmit}
+              onClick={(e) => { handleSubmit(e,"OPEN" ) }}
               className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
             >
               Publish
             </button>
             <button
-              onClick={handleSubmit}
+              onClick={(e) => { handleSubmit(e, "DRAFT")}}
               className="bg-gray-700 text-white px-4 py-2 rounded hover:bg-blue-700 ml-10"
             >
               Draft
@@ -320,9 +332,14 @@ const CourseDetails: React.FC = () => {
                     className="w-full border p-2 rounded"
                   >
                     <option value="">-- Chọn category --</option>
-                    <option value="Java">Java</option>
+                    {categories && categories.map((item) => {
+                      return (
+                        <option value={item}>{item}</option>
+                      );
+                    })}
+                    {/* <option value="Java">Java</option>
                     <option value="Programming">Programming</option>
-                    <option value="Python">Python</option>
+                    <option value="Python">Python</option> */}
                   </select>
                   <button
                     type="button"
@@ -364,9 +381,9 @@ const CourseDetails: React.FC = () => {
                 className="w-full border p-2 rounded"
               >
                 <option value="">-- Chọn level --</option>
-                <option value="Beginner">Beginner</option>
-                <option value="Intermediate">Intermediate</option>
-                <option value="Advanced">Advanced</option>
+                <option value="BEGINNER">BEGINNER</option>
+                <option value="MIDDLE">MIDDLE</option>
+                <option value="MASTER">MASTER</option>
               </select>
               {errors.level && (
                 <p className="text-red-500 text-sm">{errors.level}</p>
