@@ -1,7 +1,9 @@
 "use client";
-import React from 'react';
+import React, { useEffect } from 'react';
 import Table from '../../../../components/course/Table';
 import Pagination from '../../../../components/course/Pagination';
+import { BASE_URL_LECTURE_SERVICE, BASE_URL_REVIEW_SERVICE } from '@/utils/BaseURL';
+import { useParams, useRouter } from 'next/navigation';
 
 interface ChapterData {
   id: number;
@@ -42,6 +44,17 @@ const data: ChapterData[] = [
 ];
 
 export default function ChaptersView() {
+  const params = useParams();
+  const courseId = params["course-id"] as string;
+  useEffect(() => {
+    fetch(BASE_URL_LECTURE_SERVICE + "/courses/" + courseId + "/lectures", {
+      method: 'GET',
+      credentials: "include",
+    }).then(res => res.json())
+      .then(data => {
+
+      })
+  }, [])
   return (
     <div>
       <div className="flex justify-end mb-4">

@@ -6,9 +6,7 @@ export async function middleware(req: NextRequest) {
   const currentPath = req.nextUrl.pathname;
   const refeshToken = req.cookies.get("refresh_token")?.value;
   const pathParts = currentPath.split("/").filter(part => part !== "");
-  const publicPaths = ["/login", "/register"];
-  console.log("token: " + token)
-  console.log("refeshToken: " + refeshToken)
+  const publicPaths = ["/login", "/register","/register/student","/register/teacher"];
   if (!refeshToken && !token && publicPaths.includes(currentPath)) {
     return NextResponse.next()
   }
@@ -123,11 +121,8 @@ export async function middleware(req: NextRequest) {
 // };
 export const config = {
   matcher: [
-    /**
-     * Bỏ qua:
-     *  - _next/static/ (file build)
-     *  - favicon.ico, .css, .js, .png, .jpg, .svg, .woff2, v.v...
-     */
-    "/((?!_next/static|favicon.ico|.*\\.(?:css|js|png|jpg|jpeg|svg|woff2|ttf|eot)).*)",
+    "/((?!_next/static|favicon.ico|.*\\.(?:css|js|png|jpg|jpeg|svg|woff2|ttf|eot)|feedbacks(?:/.*)?).*)",
   ],
 };
+
+  

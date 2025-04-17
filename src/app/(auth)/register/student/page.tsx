@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import NodeRSA from "node-rsa";
+import { useRouter } from "next/navigation";
 
 const publicKeyPEM = `-----BEGIN PUBLIC KEY-----
 MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAqlKHHeFCGP6ycc+NvNnU
@@ -18,7 +19,7 @@ const StudentRegistration = () => {
   const [password, setPassword] = useState("");
   const [username, setUsername] = useState("");
   const [registered, setRegistered] = useState(false);
-
+  const router = useRouter();
   const encryptPassword = (plainTextPassword: string) => {
     const key = new NodeRSA(publicKeyPEM, "pkcs8-public");
     key.setOptions({ encryptionScheme: "pkcs1" }); // Hoặc "oaep"
@@ -41,6 +42,7 @@ const StudentRegistration = () => {
 
     if (response.ok) {
       setRegistered(true);
+      router.push("/login")
     } else {
       alert("Đăng ký thất bại!");
     }
