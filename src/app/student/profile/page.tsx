@@ -2,19 +2,25 @@
 "use client";
 
 import CourseCard from "@/components/student/profile/CourseCard";
-import { useState } from "react";
+import { fetchCourses } from "@/store/slices/courseSlice";
+import { AppDispatch, RootState } from "@/store/store";
+import { useEffect, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
 
-const mockCourses = Array.from({ length: 9 }, (_, i) => ({
-  id: i,
-  title: "Beginner's Guide to Design",
-  author: "Ronald Richards",
-  rating: 5,
-  ratingCount: 1200,
-  imageUrl: "/course-thumb.jpg", // Add a sample image to public folder
-}));
+
 
 export default function MyCoursesPage() {
-  const [search, setSearch] = useState("");
+  const [searchString, setSearch] = useState("");
+  const dispatch = useDispatch<AppDispatch>();
+  const { courses, loading, error, search, sortBy, currentPage, pageSize, totalCourses } = useSelector(
+    (state: RootState) => state.course
+  );
+
+  useEffect(() => {
+    dispatch(fetchCourses({ search, page: currentPage, pageSize }));
+  }, [dispatch, search, currentPage, pageSize]);
+
+  const totalPages = Math.ceil(totalCourses / pageSize);
 
   return (
     <div className="space-y-6">
@@ -50,9 +56,25 @@ export default function MyCoursesPage() {
 
       {/* Grid of courses */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        {mockCourses.map((course) => (
-          <CourseCard key={course.id} {...course} />
-        ))}
+      {loading && <p>Loading courses...</p>}
+            {error && <p className="text-red-500">{error}</p>}
+            {!loading && !error && courses.length === 0 && <p>No courses found.</p>}
+            {!loading && !error && courses.length > 0 && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6">
+                {courses.map((course : any) => (
+                  <CourseCard
+                    key={course.id}
+                    id={course.id}
+                    title={course.title}
+                    author={course.teacherName}
+                    tearcherName={course.teacherName}
+                    rating={course.rating}
+                    ratingCount={course.ratingCount} 
+                    imageUrl={course.imageUrl}
+                  />
+                ))}
+              </div>
+            )}
       </div>
 
       {/* Pagination */}
