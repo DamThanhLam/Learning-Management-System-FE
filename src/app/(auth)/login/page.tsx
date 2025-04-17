@@ -1,6 +1,6 @@
 "use client";
 
-import { BASE_URL_USER_SERVICE } from "@/utils/BaseURL";
+import { BASEURL } from "@/utils/BaseURL";
 import encryptPassword from "@/utils/rsa";
 import { useState } from "react";
 import { useDispatch } from "react-redux";
@@ -13,24 +13,24 @@ const Login: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    fetch(BASE_URL_USER_SERVICE+"/login",{
-      method:"POST",
+    fetch(BASEURL.BASE_URL_USER_SERVICE + "/login", {
+      method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({email, password: encryptPassword(password)}),
+      body: JSON.stringify({ email, password: encryptPassword(password) }),
       credentials: "include",
     }).then(res => res.json())
-    .then(data=>{
-      console.log(data)
-      if(data.code === 200){
-        window.location.href="/"
-      }
-      else alert("Error: "+data.message)
-    }).catch(e=>{
-      alert("Error: "+e)
-    })
-    
+      .then(data => {
+        console.log(data)
+        if (data.code === 200) {
+          window.location.href = "/"
+        }
+        else alert("Error: " + data.message)
+      }).catch(e => {
+        alert("Error: " + e)
+      })
+
   };
 
   return (
@@ -69,7 +69,7 @@ const Login: React.FC = () => {
               placeholder="Nhập mật khẩu của bạn"
             />
           </div>
-          <a href="/register" style={{display:'block', textAlign:'right', color:"blue", textDecorationLine:'underline'}}>Don't have an account?</a>
+          <a href="/register" style={{ display: 'block', textAlign: 'right', color: "blue", textDecorationLine: 'underline' }}>Don't have an account?</a>
 
           {/* Nút Đăng Nhập */}
           <button

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import NodeRSA from "node-rsa";
 import { useRouter } from "next/navigation";
-
+import { BASEURL } from "@/utils/BaseURL";
 const publicKeyPEM = `-----BEGIN PUBLIC KEY-----
 MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAqlKHHeFCGP6ycc+NvNnU
 JrGAqpUBv6GTDH8W8RAeAZdKJIQD9TOkWt/152w2q/KG5LK4HezTeEjDkVZ8+RUW
@@ -32,11 +32,12 @@ const StudentRegistration = () => {
     // Mã hóa mật khẩu
     const encryptedPassword = encryptPassword(password);
 
-    const response = await fetch("http://localhost:8080/api/v1/user/student/register", {
+    const response = await fetch(BASEURL.BASE_URL_USER_SERVICE + "/student/register", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
+      credentials: "include",
       body: JSON.stringify({ email, username, password: encryptedPassword }),
     });
 
