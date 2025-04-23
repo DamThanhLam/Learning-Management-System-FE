@@ -2,36 +2,117 @@
 
 import { BASE_URL_USER_SERVICE } from "@/utils/BaseURL";
 import encryptPassword from "@/utils/rsa";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
+import { getAuth, isSignInWithEmailLink, onAuthStateChanged, sendEmailVerification, sendSignInLinkToEmail, signInWithEmailLink } from "firebase/auth";
+import { actionCodeSettings, app } from "@/config/firebase";
+import { useRouter } from "next/navigation";
 
-
+const auth = getAuth(app);
 const Login: React.FC = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [role, setRole] = useState("student");
-
+  const router = useRouter()
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    fetch(BASE_URL_USER_SERVICE+"/login",{
-      method:"POST",
+    const auth = getAuth();
+    // onAuthStateChanged(auth, (user) => {
+    //   if (user) {
+    //     sendEmailVerification(auth.currentUser)
+    //       .then(() => {
+    //         // Email verification sent!
+    //         // ...
+    //       });
+    //   } else {
+    //     // User is signed out
+    //     // ...
+    //   }
+    // });
+    // if (auth.currentUser) {
+    //   sendSignInLinkToEmail(auth, email, actionCodeSettings)
+    //     .then(() => {
+    //       // The link was successfully sent. Inform the user.
+    //       // Save the email locally so you don't need to ask the user for it again
+    //       // if they open the link on the same device.
+    //       window.localStorage.setItem('emailForSignIn', email);
+    //       window.localStorage.setItem('passwordForSignIn', encryptPassword(password));
+    //       router.push("/login/notification-send-link")
+    //       // ...
+    //     })
+    //     .catch((error) => {
+    //       const errorCode = error.code;
+    //       const errorMessage = error.message;
+    //       console.log(errorMessage)
+    //       // ...
+    //     });
+    // }else{
+
+    // }
+    fetch(BASE_URL_USER_SERVICE + "/login", {
+      method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({email, password: encryptPassword(password)}),
+      body: JSON.stringify({ email, password: encryptPassword(password)}),
       credentials: "include",
     }).then(res => res.json())
-    .then(data=>{
-      console.log(data)
-      if(data.code === 200){
-        window.location.href="/"
-      }
-      else alert("Error: "+data.message)
-    }).catch(e=>{
-      alert("Error: "+e)
-    })
-    
+      .then(data => {
+        console.log(data)
+        if (data.code === 200) {
+          window.location.href = "/"
+        }
+        else alert("Error: " + data.message)
+      }).catch(e => {
+        alert("Error: " + e)
+      })
+    e.preventDefault();
+
+
   };
+
+  // Step 2: Tự động đăng nhập nếu link hợp lệ
+  useEffect(() => {
+
+    if (isSignInWithEmailLink(auth, window.location.href)) {
+      let storedEmail = window.localStorage.getItem('emailForSignIn');
+      if (!storedEmail) {
+        storedEmail = window.prompt('Vui lòng nhập lại email của bạn để xác nhận đăng nhập:');
+      }
+
+      if (storedEmail) {
+        signInWithEmailLink(auth, storedEmail, window.location.href)
+          .then((result) => {
+            console.log(result)
+            fetch(BASE_URL_USER_SERVICE + "/login", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({ email: window.localStorage.getItem('emailForSignIn'), password: window.localStorage.getItem('passwordForSignIn') }),
+              credentials: "include",
+            }).then(res => res.json())
+              .then(data => {
+                console.log(data)
+                if (data.code === 200) {
+                  window.location.href = "/"
+                }
+                else alert("Error: " + data.message)
+              }).catch(e => {
+                alert("Error: " + e)
+              })
+
+            window.localStorage.removeItem('emailForSignIn');
+            window.localStorage.removeItem('passwordForSignIn');
+            console.log('Đăng nhập thành công!');
+
+            // redirect to dashboard or set user context here
+          })
+          .catch((error) => {
+            console.log('Đăng nhập thất bại: ' + error.message);
+          });
+      }
+    }
+  }, []);
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-100">
@@ -69,7 +150,7 @@ const Login: React.FC = () => {
               placeholder="Nhập mật khẩu của bạn"
             />
           </div>
-          <a href="/register" style={{display:'block', textAlign:'right', color:"blue", textDecorationLine:'underline'}}>Don't have an account?</a>
+          <a href="/register" style={{ display: 'block', textAlign: 'right', color: "blue", textDecorationLine: 'underline' }}>Don't have an account?</a>
 
           {/* Nút Đăng Nhập */}
           <button

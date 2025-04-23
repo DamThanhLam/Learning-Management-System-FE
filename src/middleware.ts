@@ -6,7 +6,7 @@ export async function middleware(req: NextRequest) {
   const currentPath = req.nextUrl.pathname;
   const refeshToken = req.cookies.get("refresh_token")?.value;
   const pathParts = currentPath.split("/").filter(part => part !== "");
-  const publicPaths = ["/login", "/register","/register/student","/register/teacher"];
+  const publicPaths = ["/login","/login/notification-send-link", "/register","/register/student","/register/teacher"];
   if (!refeshToken && !token && publicPaths.includes(currentPath)) {
     return NextResponse.next()
   }
@@ -81,7 +81,7 @@ export async function middleware(req: NextRequest) {
 
 
     // Nếu đang truy cập `/login` hoặc `/register`, chuyển hướng về trang dashboard
-    if (currentPath === "/login" || currentPath === "/register") {
+    if (publicPaths.includes(currentPath)) {
       const response = NextResponse.redirect(new URL("/", req.url));
 
       response.cookies.set("groups", JSON.stringify(responseData.groups), {
@@ -121,8 +121,13 @@ export async function middleware(req: NextRequest) {
 // };
 export const config = {
   matcher: [
-    "/((?!_next/static|favicon.ico|.*\\.(?:css|js|png|jpg|jpeg|svg|woff2|ttf|eot)|feedbacks(?:/.*)?).*)",
+    /*
+     * Bỏ qua các file tĩnh và API docs.
+     * Middleware chỉ áp dụng cho route người dùng truy cập.
+     */
+    "/((?!api|_next/static|_next/image|favicon.ico|.*\\.(?:css|js|png|jpg|jpeg|svg|woff2|ttf|eot|json)).*)","/register/:path*"
   ],
 };
+
 
   

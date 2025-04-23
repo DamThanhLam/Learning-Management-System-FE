@@ -6,11 +6,13 @@ import { motion } from "framer-motion";
 import { User, GraduationCap } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { getAuth, isSignInWithEmailLink, signInWithEmailLink } from "firebase/auth";
 
 export default function RegisterChoice() {
     const router = useRouter();
     const [groups, setGroups] = useState<string[]>([]);
-
+    
+      
     useEffect(() => {
         const cookieValue = document.cookie
             .split("; ")

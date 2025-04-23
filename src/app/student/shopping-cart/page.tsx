@@ -3,36 +3,36 @@ import { useState } from "react";
 import Link from "next/link";
 
 export default function ShoppingCart() {
-    // Sample data for cart items
-    const cartItemsSample = [
-        {
-          courseId: "course456",
-          courseName: "Introduction to User Experience Design",
-          rating: 4.8,
-          lectureQuantity: 155,
-          price: 40.0,
-          urlAva: "https://picsum.photos/200/300",
-          teacherName: "John Doe",
-        },
-        {
-          courseId: "course789",
-          courseName: "Advanced React Development",
-          rating: 4.7,
-          lectureQuantity: 200,
-          price: 60.0,
-          urlAva: "https://picsum.photos/200/300",
-          teacherName: "Jane Smith",
-        },
-        {
-          courseId: "course123",
-          courseName: "Mastering Python for Data Science",
-          rating: 4.9,
-          lectureQuantity: 180,
-          price: 50.0,
-          urlAva: "https://picsum.photos/200/300",
-          teacherName: "Alice Johnson",
-        },
-      ];
+  // Sample data for cart items
+  const cartItemsSample = [
+    {
+      courseId: "course456",
+      courseName: "Introduction to User Experience Design",
+      rating: 4.8,
+      lectureQuantity: 155,
+      price: 40.0,
+      urlAva: "https://picsum.photos/200/300",
+      teacherName: "John Doe",
+    },
+    {
+      courseId: "course789",
+      courseName: "Advanced React Development",
+      rating: 4.7,
+      lectureQuantity: 200,
+      price: 60.0,
+      urlAva: "https://picsum.photos/200/300",
+      teacherName: "Jane Smith",
+    },
+    {
+      courseId: "course123",
+      courseName: "Mastering Python for Data Science",
+      rating: 4.9,
+      lectureQuantity: 180,
+      price: 50.0,
+      urlAva: "https://picsum.photos/200/300",
+      teacherName: "Alice Johnson",
+    },
+  ];
   // State to manage cart items
   const [cartItems, setCartItems] = useState(cartItemsSample);
 
@@ -61,8 +61,8 @@ export default function ShoppingCart() {
                 <h2 className="text-lg font-semibold">{item.courseName}</h2>
                 <p className="text-sm text-gray-500">By {item.teacherName}</p>
                 <p className="text-sm text-gray-500">
-                    {item.lectureQuantity} Lectures,{" "}
-                    <span className="text-yellow-600">Rated {item.rating.toFixed(1)} ★</span>
+                  {item.lectureQuantity} Lectures,{" "}
+                  <span className="text-yellow-600">Rated {item.rating.toFixed(1)} ★</span>
                 </p>
                 <div className="flex space-x-4 mt-2">
                   <button className="text-blue-500 hover:underline">

@@ -4,14 +4,13 @@ import { ReactNode } from "react";
 import Link from "next/link";
 import { Home, Users, FileText, FilePlus } from "lucide-react"; // Use lucide-react icons for the sidebar
 import Image from "next/image";
-import { useSelector } from "react-redux";
-
+import ProfileComponent from "@/components/ProfileComponent";
 const menuItems = [
-  { name: "General", href: "admin/users", icon: Home },
-  { name: "Student", href: "admin/users", icon: Users },
-  { name: "Teacher", href: "admin/teachers", icon: FileText },
-  { name: "Billing", href: "admin/teachers", icon: FilePlus },
-  { name: "Feedback", href: "admin/teachers", icon: FilePlus },
+  { name: "General", href: "/admin/users", icon: Home },
+  { name: "Student", href: "/admin/users", icon: Users },
+  { name: "Teacher", href: "/admin/teachers", icon: FileText },
+  { name: "Billing", href: "/admin/teachers", icon: FilePlus },
+  { name: "Feedback", href: "/admin/teachers", icon: FilePlus },
 ];
 
 export default function Layout({ children }: { children: ReactNode }) {
@@ -44,14 +43,7 @@ export default function Layout({ children }: { children: ReactNode }) {
         </nav>
 
         {/* Sign Out */}
-        <div className="p-4 mt-auto text-center">
-          <Link
-            href="/signout"
-            className="flex items-center p-3 rounded-lg transition-colors duration-200 hover:bg-red-100"
-          >
-            <span className="text-base text-red-500">Sign out</span>
-          </Link>
-        </div>
+        <ProfileComponent />
       </aside>
 
       {/* Main Content */}

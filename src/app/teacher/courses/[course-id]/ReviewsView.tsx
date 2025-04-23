@@ -57,8 +57,8 @@ export default function ReviewsView() {
   }, [review])
   useEffect(() => {
     if (review === 0) {
-      const newStats:ReviewStats = {
-        0: { title: 'Total Reviews', value: reviews.length },
+      const newStats: ReviewStats = {
+        0: { title: 'Total Reviews', value: reviews && reviews.length || 0 },
         1: { title: '1 Star Reviews', value: 0, color: 'red' },
         2: { title: '2 Star Reviews', value: 0, color: 'orange' },
         3: { title: '3 Star Reviews', value: 0, color: 'yellow' },
@@ -66,7 +66,7 @@ export default function ReviewsView() {
         5: { title: '5 Star Reviews', value: 0, color: 'darkgreen' },
       };
 
-      reviews.forEach(item => {
+      reviews && reviews.forEach(item => {
         if (newStats[item.review]) {
           newStats[item.review].value++;
         }

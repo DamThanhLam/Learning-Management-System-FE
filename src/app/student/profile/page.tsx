@@ -1,68 +1,107 @@
-// app/profile/my-courses/page.tsx
-"use client";
-
-import CourseCard from "@/components/student/profile/CourseCard";
+"use client"
+import Image from "next/image";
 import { useState } from "react";
 
-const mockCourses = Array.from({ length: 9 }, (_, i) => ({
-  id: i,
-  title: "Beginner's Guide to Design",
-  author: "Ronald Richards",
-  rating: 5,
-  ratingCount: 1200,
-  imageUrl: "/course-thumb.jpg", // Add a sample image to public folder
-}));
+export interface CourseCardProps {
+  title: string;
+  author: string;
+  rating: number;
+  ratingCount: number;
+  price: number;
+  urlAvt: string;
+}
 
-export default function MyCoursesPage() {
-  const [search, setSearch] = useState("");
+const shimmer = (w: number, h: number) => `
+<svg width="${w}" height="${h}" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <defs>
+    <linearGradient id="g">
+      <stop stop-color="#f6f7f8" offset="0%" />
+      <stop stop-color="#edeef1" offset="20%" />
+      <stop stop-color="#f6f7f8" offset="40%" />
+      <stop stop-color="#f6f7f8" offset="70%" />
+    </linearGradient>
+  </defs>
+  <rect width="${w}" height="${h}" fill="#f6f7f8" />
+  <rect id="r" width="${w}" height="${h}" fill="url(#g)" />
+</svg>`;
+
+const toBase64 = (str: string) =>
+  typeof window === 'undefined'
+    ? Buffer.from(str).toString('base64')
+    : window.btoa(str);
+
+export default function CourseCard({
+  title,
+  author,
+  rating,
+  ratingCount,
+  price,
+  urlAvt,
+}: CourseCardProps) {
+  const [imageError, setImageError] = useState(false);
+  const defaultImage = "/course-default.jpg";
+
+  // Chuyển đổi giá tiền sang format VND
+  const formattedPrice = new Intl.NumberFormat('vi-VN', {
+    style: 'currency',
+    currency: 'VND'
+  }).format(price);
+
+  // Tính số sao (rating từ 0-5)
+  const stars = Math.min(Math.max(rating, 0), 5);
+  const fullStars = "★".repeat(Math.floor(stars));
+  const emptyStars = "☆".repeat(5 - Math.floor(stars));
+
+  const handleImageError = () => {
+    console.log("Image failed to load:", urlAvt);
+    setImageError(true);
+  };
+
+  const imageUrl = urlAvt && urlAvt.trim() !== "" ? urlAvt : defaultImage;
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <h2 className="text-xl font-semibold">
-          Courses <span className="text-gray-500">(12)</span>
-        </h2>
-        <div className="flex items-center gap-3 flex-wrap">
-          <div className="relative">
-            <input
-              type="text"
-              placeholder="Search User"
-              className="pl-10 pr-4 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-300"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
-            <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 text-sm">
-              🔍
-            </span>
+    <div className="rounded-lg border border-gray-200 overflow-hidden shadow-sm hover:shadow-md transition">
+      <div className="relative w-full h-40 bg-gray-100">
+        {!imageError ? (
+          <Image
+            src={imageUrl}
+            alt={title}
+            fill
+            className="object-cover"
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+            onError={handleImageError}
+            placeholder="blur"
+            blurDataURL={`data:image/svg+xml;base64,${toBase64(shimmer(700, 475))}`}
+            unoptimized
+          />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center bg-gray-100">
+            <svg
+              className="w-12 h-12 text-gray-400"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+              />
+            </svg>
           </div>
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-gray-700">Sort By</span>
-            <select title="option" className="border rounded px-2 py-1 text-sm">
-              <option>Relevance</option>
-              <option>Newest</option>
-              <option>Top Rated</option>
-            </select>
-            <button className="border px-3 py-1 rounded text-sm">⚙️ Filter</button>
-          </div>
+        )}
+      </div>
+      <div className="p-4 space-y-2">
+        <h3 className="font-semibold text-sm line-clamp-2 min-h-[2.5rem]">{title}</h3>
+        <p className="text-xs text-gray-500">By {author}</p>
+        <div className="flex items-center text-sm text-yellow-500 space-x-1">
+          <span>{fullStars}{emptyStars}</span>
+          <span className="text-gray-500 text-xs">({ratingCount} Ratings)</span>
         </div>
-      </div>
-
-      {/* Grid of courses */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        {mockCourses.map((course) => (
-          <CourseCard key={course.id} {...course} />
-        ))}
-      </div>
-
-      {/* Pagination */}
-      <div className="flex justify-center pt-6">
-        <div className="inline-flex items-center border rounded-md overflow-hidden text-sm">
-          <button className="px-3 py-1 hover:bg-gray-100">&lt;</button>
-          <button className="px-3 py-1 bg-gray-100 font-semibold">1</button>
-          <button className="px-3 py-1 hover:bg-gray-100">2</button>
-          <button className="px-3 py-1 hover:bg-gray-100">3</button>
-          <button className="px-3 py-1 hover:bg-gray-100">&gt;</button>
+        <div className="text-sm font-semibold text-blue-600">
+          {formattedPrice}
         </div>
       </div>
     </div>

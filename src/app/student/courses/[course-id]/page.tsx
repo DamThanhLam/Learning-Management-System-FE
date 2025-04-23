@@ -164,7 +164,7 @@ export default function CourseDetailsPage({
         return (
           <div className='cursor-pointer'
             onClick={() => {
-              router.replace("/student/mentors/" + teacherData.id)
+              router.replace("/student/mentors?id="+teacherData.id )
             }}>
             <h2 className="text-xl font-bold mb-3">About the Teacher</h2>
             <div className="flex items-center gap-4">
@@ -172,9 +172,7 @@ export default function CourseDetailsPage({
                 src={teacherData.urlImage || 'https://via.placeholder.com/150'} // Fallback for missing image
                 alt={teacherData.userName || 'Unknown Teacher'}
                 className="w-20 h-20 rounded-full border border-gray-300 cursor-pointer"
-                onClick={() => {
-                  router.replace("/student/mentors/" + teacherData.id)
-                }}
+              
               />
               <div>
                 <p className="text-lg font-semibold cursor-pointer">
@@ -198,7 +196,7 @@ export default function CourseDetailsPage({
                   className="p-4 border border-gray-300 rounded-lg shadow-md">
                   <div className="flex items-center gap-4 mb-2">
                     <img
-                      src={review.userImage || 'https://via.placeholder.com/50'}
+                      src={review.urlAvt || 'https://via.placeholder.com/50'}
                       alt={review.userName}
                       className="w-12 h-12 rounded-full border border-gray-300"
                     />
