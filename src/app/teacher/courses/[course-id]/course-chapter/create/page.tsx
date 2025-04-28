@@ -131,6 +131,7 @@ export default function ChapterManagement() {
     // if publishing, require file, video, thumbnail
     if (status === 'PUBLISHED') {
       (Object.keys(resources) as ResourceType[]).forEach(type => {
+        if(type !== "File") return
         if (!resources[type].file) {
           setResources(prev => ({
             ...prev,
@@ -241,7 +242,7 @@ export default function ChapterManagement() {
             <div>
               <label className="block text-sm font-medium">Description*</label>
               <textarea
-                rows={4}
+                rows={20}
                 value={description}
                 onChange={handleDescriptionChange}
                 placeholder="Enter chapter description"
@@ -260,7 +261,7 @@ export default function ChapterManagement() {
               const { file, error } = resources[type];
               return (
                 <div key={type} className="border p-4 rounded bg-gray-50">
-                  <label className="font-medium block mb-2">{type}*</label>
+                  <label className="font-medium block mb-2">{type}{type==="File"?"*":""}</label>
                   <div
                     onDrop={handleDrop(type)}
                     onDragOver={handleDragOver}
