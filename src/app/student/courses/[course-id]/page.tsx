@@ -8,6 +8,8 @@ import {
 } from '@/utils/BaseURL'
 import BuyCourseCard from '@/components/course/BuyCourseCard'
 import { useRouter } from 'next/navigation'
+import { EditorContent, useEditor } from '@tiptap/react'
+import StarterKit from '@tiptap/starter-kit'
 
 interface Course {
   courseName: string
@@ -50,6 +52,11 @@ export default function CourseDetailsPage({
   const [activeTab, setActiveTab] = useState<'teacher' | 'reviews'>('teacher') // Tab state
   const [reviews, setReviews] = useState<any[]>([]) // Reviews fetched from the API
   const router = useRouter();
+  const editor = useEditor({
+    extensions: [StarterKit],
+    content: "", // Đưa dữ liệu vào editor
+    editable: false, // Không cho sửa
+  })
   useEffect(() => {
     const resolveParams = async () => {
       const resolvedParams = await params
@@ -80,6 +87,7 @@ export default function CourseDetailsPage({
         console.log(responseData)
         setCourse(responseData.data) // Use the `data` field from the response
 
+        editor?.commands.setContent(responseData.data ? responseData.data.description : "")
         // Fetch teacher details after course data is loaded
         if (responseData.data.teacherId) {
           fetchTeacherDetails(responseData.data.teacherId)
@@ -164,7 +172,7 @@ export default function CourseDetailsPage({
         return (
           <div className='cursor-pointer'
             onClick={() => {
-              router.replace("/student/mentors?id="+teacherData.id )
+              router.replace("/student/mentors?id=" + teacherData.id)
             }}>
             <h2 className="text-xl font-bold mb-3">About the Teacher</h2>
             <div className="flex items-center gap-4">
@@ -172,7 +180,7 @@ export default function CourseDetailsPage({
                 src={teacherData.urlImage || 'https://via.placeholder.com/150'} // Fallback for missing image
                 alt={teacherData.userName || 'Unknown Teacher'}
                 className="w-20 h-20 rounded-full border border-gray-300 cursor-pointer"
-              
+
               />
               <div>
                 <p className="text-lg font-semibold cursor-pointer">
@@ -225,6 +233,24 @@ export default function CourseDetailsPage({
   if (!course) {
     return <p>Course not found.</p>
   }
+  const handleAddToCart = ()=>{
+    fetch(BASE_URL_COURSE_SERVICE+"/shopping-cart",{
+      method:"POST",
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
+      credentials:"include",
+      body:JSON.stringify({courseId})
+    }).then(res =>res.json())
+    .then(data=>{
+      router.push("/student/shopping-cart")
+    })
+    .catch(error=> alert(error))
+  }
+  const handleBuyNow=()=>{
+    router.push('/student/shopping-cart/checkout?courseIds='+courseId)
+  }
 
   return (
     <div className="flex flex-col items-center min-h-screen bg-white p-5 w-full">
@@ -238,7 +264,12 @@ export default function CourseDetailsPage({
         <div className="flex flex-col md:flex-row gap-8">
           <div className="flex-[3]">
             <h1 className="text-5xl font-bold mb-3">{course.courseName}</h1>
-            <p className="text-xl text-gray-700 mb-3">{course.description}</p>
+            <div className="p-4 min-h-[150px] prose max-w-none list-inside">
+              <EditorContent
+                editor={editor}
+                className="focus:outline-none"
+              />
+            </div>
             <p className="text-xl text-yellow-500 font-bold mb-3">
               {(course.totalReview || 0).toFixed(1)} ★ (
               {course.countReviews || 0} ratings) | {course.countLectures || 0}{' '}
@@ -251,8 +282,8 @@ export default function CourseDetailsPage({
             <BuyCourseCard
               urlAvt={course.urlAvt || 'https://via.placeholder.com/150'}
               price={course.price || 0}
-              onAddToCart={() => console.log('Add to Cart clicked')}
-              onBuyNow={() => console.log('Buy Now clicked')}
+              onAddToCart={() => handleAddToCart()}
+              onBuyNow={() => handleBuyNow()}
             />
           </div>
         </div>
@@ -263,16 +294,16 @@ export default function CourseDetailsPage({
         <div className="flex gap-4 border-b border-gray-300 pb-2">
           <button
             className={`px-4 py-2 font-semibold ${activeTab === 'teacher'
-                ? 'text-blue-500 border-b-2 border-blue-500'
-                : 'text-gray-500'
+              ? 'text-blue-500 border-b-2 border-blue-500'
+              : 'text-gray-500'
               }`}
             onClick={() => setActiveTab('teacher')}>
             Teacher
           </button>
           <button
             className={`px-4 py-2 font-semibold ${activeTab === 'reviews'
-                ? 'text-blue-500 border-b-2 border-blue-500'
-                : 'text-gray-500'
+              ? 'text-blue-500 border-b-2 border-blue-500'
+              : 'text-gray-500'
               }`}
             onClick={() => setActiveTab('reviews')}>
             Reviews

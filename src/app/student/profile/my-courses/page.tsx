@@ -64,13 +64,7 @@ export default function MyCoursesPage() {
                 apiSortValue
             });
 
-            const response = await axios.get<APIResponse>(`${BASE_URL_COURSE_SERVICE}/search`, {
-                params: {
-                    page: page - 1,
-                    size: 9,
-                    teacherName: teacherSearchTerm || undefined,
-                    sort: apiSortValue,
-                },
+            const response = await axios.get<APIResponse>(`${BASE_URL_COURSE_SERVICE}/student`, {
                 headers: {
                     'Content-Type': 'application/json',
                     'Accept': 'application/json'

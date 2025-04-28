@@ -1,59 +1,72 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
+import { BASE_URL_COURSE_SERVICE } from "@/utils/BaseURL";
+import { useRouter } from "next/navigation";
 
 export default function ShoppingCart() {
   // Sample data for cart items
   const cartItemsSample = [
     {
-      courseId: "course456",
-      courseName: "Introduction to User Experience Design",
-      rating: 4.8,
-      lectureQuantity: 155,
-      price: 40.0,
-      urlAva: "https://picsum.photos/200/300",
-      teacherName: "John Doe",
-    },
-    {
-      courseId: "course789",
-      courseName: "Advanced React Development",
-      rating: 4.7,
-      lectureQuantity: 200,
-      price: 60.0,
-      urlAva: "https://picsum.photos/200/300",
-      teacherName: "Jane Smith",
-    },
-    {
-      courseId: "course123",
+      id: "course123",
       courseName: "Mastering Python for Data Science",
-      rating: 4.9,
-      lectureQuantity: 180,
+      totalReview: 4.9,
+      countLectures: 180,
       price: 50.0,
-      urlAva: "https://picsum.photos/200/300",
+      urlAvt: "https://picsum.photos/200/300",
       teacherName: "Alice Johnson",
     },
   ];
+  const router = useRouter();
   // State to manage cart items
   const [cartItems, setCartItems] = useState(cartItemsSample);
-
+  useEffect(() => {
+    fetch(BASE_URL_COURSE_SERVICE + "/shopping-cart", {
+      method: "GET",
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
+      credentials: "include",
+    }).then(res => res.json())
+      .then(data => {
+        setCartItems(data.data || [])
+      })
+  }, [])
   // Function to handle removing an item
   const handleRemove = (courseId: string) => {
-    setCartItems((prevItems) => prevItems.filter((item) => item.courseId !== courseId));
+    setCartItems((prevItems) => prevItems.filter((item) => item.id !== courseId));
+    fetch(BASE_URL_COURSE_SERVICE + "/shopping-cart", {
+      method: "DELETE",
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
+      credentials: "include",
+      body: JSON.stringify({ courseId })
+    }).then(res => res.json())
+      .then(data => {
+      })
   };
-
+  const handleCheckout = () => {
+    console.log(cartItems)
+    const ids = cartItems.map(c => c.id).join(',')
+    console.log(ids)
+    router.push('/student/shopping-cart/checkout?courseIds=' + ids)
+  }
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
       <h1 className="text-2xl font-bold mb-6">Shopping Cart</h1>
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Cart Items */}
         <div className="lg:col-span-2 space-y-4">
-          {cartItems.map((item) => (
+          {cartItems.map((item: any) => (
             <div
               key={item.courseId}
               className="flex items-center border p-4 rounded-lg"
             >
               <img
-                src={item.urlAva}
+                src={item.urlAvt}
                 alt={`${item.courseName} Thumbnail`}
                 className="w-24 h-24 object-cover rounded-lg"
               />
@@ -61,15 +74,15 @@ export default function ShoppingCart() {
                 <h2 className="text-lg font-semibold">{item.courseName}</h2>
                 <p className="text-sm text-gray-500">By {item.teacherName}</p>
                 <p className="text-sm text-gray-500">
-                  {item.lectureQuantity} Lectures,{" "}
-                  <span className="text-yellow-600">Rated {item.rating.toFixed(1)} ★</span>
+                  {item.countLectures} Lectures,{" "}
+                  <span className="text-yellow-600">Rated {item.totalReview.toFixed(1)} ★</span>
                 </p>
                 <div className="flex space-x-4 mt-2">
                   <button className="text-blue-500 hover:underline">
                     Save for later
                   </button>
                   <button
-                    onClick={() => handleRemove(item.courseId)}
+                    onClick={() => handleRemove(item.id)}
                     className="text-red-500 hover:underline"
                   >
                     Remove
@@ -105,7 +118,7 @@ export default function ShoppingCart() {
               </span>
             </div>
           </div>
-          <button className="w-full mt-4 bg-blue-500 text-white py-2 rounded-lg">
+          <button className="w-full mt-4 bg-blue-500 text-white py-2 rounded-lg" onClick={handleCheckout}>
             Proceed to Checkout
           </button>
         </div>
