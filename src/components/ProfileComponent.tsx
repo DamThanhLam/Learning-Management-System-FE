@@ -47,27 +47,27 @@ export default function ProfileComponent() {
     form.append("userName", formData.userName);
     form.append("email", formData.email);
     form.append("phoneNumber", formData.phoneNumber);
-    if (formData.birthday) form.append("birthday", formData.birthday); 
-    if (formData.gender) form.append("gender", formData.gender); 
-    if (formData.imageAvt) form.append("imageAvt", formData.imageAvt); 
-    if (formData.cvFile) form.append("cvFile", formData.cvFile);       
-  
+    if (formData.birthday) form.append("birthday", formData.birthday);
+    if (formData.gender) form.append("gender", formData.gender);
+    if (formData.imageAvt) form.append("imageAvt", formData.imageAvt);
+    if (formData.cvFile) form.append("cvFile", formData.cvFile);
+
     try {
       const response = await fetch("http://localhost:8080/api/v1/user", {
         method: "PUT",
         credentials: "include",
         body: form,
       });
-  
+
       if (response.status === 204) {
         alert("Profile updated successfully");
         setShowModal(false);
         window.location.reload();
         return;
       }
-  
+
       const data = await response.json();
-  
+
       if (data.status === "success") {
         alert("Profile updated successfully");
         setShowModal(false);
@@ -75,11 +75,18 @@ export default function ProfileComponent() {
       } else {
         const extractedErrors: { [key: string]: string } = {};
         if (Array.isArray(data.errors)) {
-          data.errors.forEach((err: { field: string; defaultMessage?: string; message?: string }) => {
-            const field = err.field || "";
-            const message = err.defaultMessage || err.message || "Validation error";
-            extractedErrors[field] = message;
-          });
+          data.errors.forEach(
+            (err: {
+              field: string;
+              defaultMessage?: string;
+              message?: string;
+            }) => {
+              const field = err.field || "";
+              const message =
+                err.defaultMessage || err.message || "Validation error";
+              extractedErrors[field] = message;
+            }
+          );
         } else if (typeof data.errors === "string") {
           extractedErrors.general = data.errors;
         }
@@ -90,22 +97,26 @@ export default function ProfileComponent() {
       alert("Failed to update profile");
     }
   };
-  
 
   if (!user) return null;
 
   return (
     <div className="p-4 mt-auto text-center">
       <div
-        className="flex items-center gap-3 p-3 rounded-lg transition-colors duration-200 hover:bg-gray-100 cursor-pointer"
+        className="flex items-center gap-3 p-3 rounded-lg transition-colors duration-200 hover:bg-gray-700 cursor-pointer"
         onClick={() => setShowModal(true)}
       >
         <img
-          src={user.urlImage || "/default-avatar.png"}
+          src={
+            user.urlImage ||
+            "https://khoi-dev-ktpm.s3.ap-southeast-1.amazonaws.com/default-icon.png"
+          }
           alt="Avatar"
-          className="w-10 h-10 rounded-full object-cover"
+          className="w-10 h-10 rounded-full object-cover border border-gray-600"
         />
-        <span className="text-base font-medium">{user.userName}</span>
+        <span className="text-base font-medium text-white">
+          {user.userName}
+        </span>
       </div>
 
       {showModal && (
