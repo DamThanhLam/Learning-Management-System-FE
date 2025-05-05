@@ -34,7 +34,7 @@ export default function Table({ columns, data }: TableProps) {
                 key={index}
                 className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}
                 onClick={() => {
-                  router.push(courseId + "/course-chapter/" + row.id)
+                  row.chapter&&router.push(courseId + "/course-chapter/" + row.id)
                 }}
               >
                 {columns.map((col) => {

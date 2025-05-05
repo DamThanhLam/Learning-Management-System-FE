@@ -1,8 +1,10 @@
 "use client";
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import Table from '../../../../components/course/Table';
 import Pagination from '../../../../components/course/Pagination';
 import { useParams } from 'next/navigation';
+import { refreshToken } from '@/utils/API';
+import { BASE_URL_COURSE_SERVICE, BASE_URL_USER_SERVICE } from '@/utils/BaseURL';
 
 interface CustomerData {
   id: number;
@@ -15,13 +17,10 @@ interface CustomerData {
 }
 
 const columns: string[] = [
-  'ID',
-  'Customer',
-  'Type',
-  'Country',
-  'Joined',
-  'Total Amount',
-  'Last Order',
+  'Customer Name',
+  'Date Buy',
+  'Email',
+  'Amount',
 ];
 
 const data: CustomerData[] = [
@@ -57,9 +56,25 @@ const data: CustomerData[] = [
 export default function CustomerView() {
   const params = useParams();
   const courseId = params["course-id"] as string;
+  const [customers, setCustomers] = useState([])
+  useEffect(()=>{
+    refreshToken().then(()=>{
+      fetch(BASE_URL_COURSE_SERVICE+"/get-customer?courseId="+courseId,{
+        method:"GET",
+        credentials:"include"
+      }).then(res=> res.json())
+      .then(data=>{
+        if(data.code===200){
+          setCustomers(data.data ||[])
+        }else{
+        }
+      })
+      .then(error => console.log(error))
+    })
+  },[]);
   return (
     <div>
-      <Table columns={columns} data={data} />
+      <Table columns={columns} data={customers} />
       <Pagination />
     </div>
   );

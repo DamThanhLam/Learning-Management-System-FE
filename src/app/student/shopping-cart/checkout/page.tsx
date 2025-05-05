@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import { BASE_URL_COURSE_SERVICE, BASE_URL_PAYMENT_SERVICE } from "@/utils/BaseURL";
+import { refreshToken } from "@/utils/API";
 
 export default function CheckoutPage() {
     const router = useRouter();
@@ -23,30 +24,34 @@ export default function CheckoutPage() {
     const searchParams = useSearchParams()
     const idsParam = searchParams.get('courseIds')
     useEffect(() => {
-        const idsArray = searchParams.get('courseIds')?.split(',') || []
-        // 1) Build an array of fetch-promises
-        const promises = idsArray.map(id =>
-            fetch(`${BASE_URL_COURSE_SERVICE}?id=${id}`)
-                .then(res => res.json())
-        )
+        refreshToken().then(() => {
+            const idsArray = searchParams.get('courseIds')?.split(',') || []
+            // 1) Build an array of fetch-promises
+            const promises = idsArray.map(id =>
+                fetch(`${BASE_URL_COURSE_SERVICE}?id=${id}`)
+                    .then(res => res.json())
+            )
 
-        // 2) Wait for them all, then update state exactly once
-        Promise.all(promises)
-            .then(results => {
-                // each result is the parsed JSON, e.g. { data: { price, ... } }
-                const courseData = results.map(r => r.data)
-                setCourses(courseData)
+            // 2) Wait for them all, then update state exactly once
+            Promise.all(promises)
+                .then(results => {
+                    // each result is the parsed JSON, e.g. { data: { price, ... } }
+                    const courseData = results.map(r => r.data)
+                    setCourses(courseData)
 
-                const total = courseData
-                    .reduce((sum, c) => {
-                        const p = Number(c.price)
-                        return sum + (isNaN(p) ? 0 : p)
-                    }, 0)
-                setPriceTotal(total)
-            })
-            .catch(err => {
-                console.error('Error fetching courses:', err)
-            })
+                    const total = courseData
+                        .reduce((sum, c) => {
+                            const p = Number(c.price)
+                            return sum + (isNaN(p) ? 0 : p)
+                        }, 0)
+                    setPriceTotal(total)
+                })
+                .catch(err => {
+                    console.error('Error fetching courses:', err)
+                })
+        })
+
+
     }, [idsParam])
 
 
@@ -59,7 +64,10 @@ export default function CheckoutPage() {
         setFormData((prev) => ({ ...prev, [name]: value }));
     };
 
-    const handleCheckout = () => {
+    const handleCheckout = async () => {
+
+        await refreshToken()
+
         const idsArray = searchParams.get('courseIds')?.split(',') || []
         fetch(BASE_URL_PAYMENT_SERVICE + "/submitOrder", {
             method: "POST",
@@ -67,13 +75,20 @@ export default function CheckoutPage() {
                 'Content-Type': 'application/json',
             },
             credentials: "include",
-            body: JSON.stringify({ courseIds:idsArray ,orderInfo:"AA"})
+            body: JSON.stringify({ courseIds: idsArray, orderInfo: "AA" })
         })
-        .then(res => res.json())
-        .then(data=> {
-            window.open(data.urlPayment, '_blank');
-        })
-        .catch(e=> alert(e))
+            .then(res => {
+                return res.json()
+            })
+            .then(data => {
+                if (data.code === 200) {
+                    window.location.href = data.urlPayment;
+
+                } else {
+                    alert(data.message);
+                }
+            })
+            .catch(e => alert(e))
         // router.push("/student/shopping-cart/checkout/order-complete");
     };
     const ItemCourse = (course: any) => {

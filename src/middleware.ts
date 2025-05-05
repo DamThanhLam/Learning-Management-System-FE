@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { BASE_URL_USER_SERVICE } from "./utils/BaseURL";
 
 export async function middleware(req: NextRequest) {
   const token = req.cookies.get("access_token")?.value; // Lấy JWT từ cookies
@@ -14,7 +15,7 @@ export async function middleware(req: NextRequest) {
 
   try {
     // Gửi request đến Backend để kiểm tra tính hợp lệ của JWT
-    const backendUrl = "http://localhost:8080/api/v1/user/verify-token";
+    const backendUrl = BASE_URL_USER_SERVICE+"/verify-token";
     const response = token && await fetch(backendUrl, {
       method: "POST",
       credentials: 'include',
@@ -39,7 +40,7 @@ export async function middleware(req: NextRequest) {
         return response;
       }
 
-      const refreshResponse = await fetch("http://localhost:8080/api/v1/user/refresh", {
+      const refreshResponse = await fetch(BASE_URL_USER_SERVICE+"/refresh", {
         method: "GET",
         credentials: 'include',
         headers: {

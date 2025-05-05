@@ -1,115 +1,233 @@
 "use client";
 
+import React, { useState, useEffect } from 'react';
 import { Line } from "react-chartjs-2";
-import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend } from "chart.js";
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend,
+} from "chart.js";
+import Sidebar from '@/components/course/Sidebar';
+import { BASE_URL_STATISTICAL_SERVICE } from '@/utils/BaseURL';
 
-// Register necessary chart.js elements
-ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend);
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend
+);
 
-// Data for the chart
-const chartData = {
-  labels: [
-    "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
-  ],
-  datasets: [
-    {
-      label: "Revenue",
-      data: [5000, 4500, 6000, 7000, 8000, 9000, 8000, 9500, 8500, 9000, 9500, 10000],
-      borderColor: "#34D399", // Green color
-      backgroundColor: "rgba(52, 211, 153, 0.2)", // Light green
-      fill: true,
-      tension: 0.3,
-    },
-  ],
-};
+function formatDate(date) {
+  return date.toISOString().split('T')[0];
+}
 
-const Revenue = () => {
+export default function Revenue() {
+  const [details, setDetails] = useState([]);
+  const [filtered, setFiltered] = useState([]);
+  const [searchUser, setSearchUser] = useState("");
+  const [searchCourse, setSearchCourse] = useState("");
+  const [filterStatus, setFilterStatus] = useState("");
+  const [startDate, setStartDate] = useState(() => {
+    const today = new Date();
+    return new Date(today.getFullYear(), today.getMonth() - 1, 1);
+  });
+  const [endDate, setEndDate] = useState(new Date());
+
+  useEffect(() => {
+    async function loadData() {
+      try {
+        const from = formatDate(startDate);
+        const to = formatDate(endDate);
+        const resp = await fetch(
+          `${BASE_URL_STATISTICAL_SERVICE}/orders?from=${from}&to=${to}`,
+          { credentials: 'include' }
+        );
+        if (!resp.ok) throw new Error('Network response was not ok');
+        const data = await resp.json();
+        setDetails(data);
+      } catch (err) {
+        console.error(err);
+      }
+    }
+    loadData();
+  }, [startDate, endDate]);
+
+  useEffect(() => {
+    let temp = [...details];
+    if (searchUser.trim()) {
+      temp = temp.filter(d =>
+        d.userName.toLowerCase().includes(searchUser.trim().toLowerCase())
+      );
+    }
+    if (searchCourse.trim()) {
+      temp = temp.filter(d =>
+        d.courseName.toLowerCase().includes(searchCourse.trim().toLowerCase())
+      );
+    }
+    if (filterStatus) {
+      temp = temp.filter(d => d.status === filterStatus);
+    }
+    setFiltered(temp);
+  }, [details, searchUser, searchCourse, filterStatus]);
+
+  const dateArray = [];
+  for (
+    let dt = new Date(startDate);
+    dt <= endDate;
+    dt.setDate(dt.getDate() + 1)
+  ) {
+    dateArray.push(formatDate(new Date(dt)));
+  }
+
+  const revenueMap = filtered.reduce((acc, d) => {
+    const day = d.date.split('T')[0];
+    acc[day] = (acc[day] || 0) + (d.price > 0 ? d.price : 0);
+    return acc;
+  }, {});
+
+  const revenueData = dateArray.map(day => revenueMap[day] || 0);
+  const totalRevenue = revenueData.reduce((a, b) => a + b, 0).toFixed(2);
+
+  const chartData = {
+    labels: dateArray,
+    datasets: [
+      {
+        label: 'Revenue',
+        data: revenueData,
+        borderColor: '#34D399',
+        backgroundColor: 'rgba(52,211,153,0.2)',
+        fill: true,
+        tension: 0.3,
+      },
+    ],
+  };
+
+  const chartOptions = {
+    maintainAspectRatio: false,
+    scales: {
+      x: {
+        type: 'category',
+        ticks: {
+          maxRotation: 0,
+          autoSkip: true,
+        }
+      },
+      y: { beginAtZero: true }
+    }
+  };
+
+  const statusColor = status => {
+    switch (status) {
+      case 'SUCCESS': return 'bg-green-100 text-green-800';
+      case 'FAIL': return 'bg-red-100 text-red-800';
+      case 'ERROR': return 'bg-yellow-100 text-yellow-800';
+      case 'INITIAL': return 'bg-gray-100 text-gray-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
+  };
+
   return (
-    <div className="w-4/5 p-6 h-screen overflow-y-auto no-scrollbar">
-      {/* Page Title */}
-      <h1 className="text-2xl font-semibold mb-6 text-gray-900">Revenue Analytics</h1>
-
-      {/* Revenue Cards and Life Time Sales Chart in one row */}
-      <div className="flex flex-wrap gap-4 mb-8">
-        {/* Revenue Cards Section */}
-        <div className="flex flex-row gap-4 w-full">
-          {[ 
-            { title: "Total Profits", value: "$24,340", change: "+8%" },
-            { title: "Last Transaction", value: "$98.76", change: "+8%" },
-            { title: "Debit", value: "$-103.52", change: "-2%" },
-          ].map((card, index) => (
-            <div key={index} className="bg-white p-6 rounded-lg shadow-md w-full">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-2xl font-semibold text-gray-900">{card.value}</p>
-                  <p className="text-sm text-gray-600">{card.title}</p>
-                </div>
-                <span
-                  className={`text-lg font-bold ${card.change.startsWith('+') ? 'text-green-500' : 'text-red-500'}`}
-                >
-                  {card.change}
-                </span>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {/* Life Time Sales Chart Section */}
-        <div className="bg-white p-6 rounded-lg shadow-md w-full">
-          <h2 className="font-semibold text-lg text-gray-900 mb-4">Life Time Sales</h2>
-          <div className="w-full mb-6">
-            <Line data={chartData} options={{ maintainAspectRatio: false }} />
+    <div className="flex bg-gray-50 h-screen w-full">
+      <div className="flex-1 p-6 overflow-y-auto">
+        <h1 className="text-3xl font-bold mb-6">Revenue Analytics</h1>
+        <div className="grid grid-cols-3 gap-4 mb-8">
+          <div className="p-4 bg-white rounded shadow">
+            <h2 className="text-sm uppercase text-gray-500">Total Revenue</h2>
+            <p className="text-2xl font-semibold mt-2">${totalRevenue}</p>
+          </div>
+          <div className="p-4 bg-white rounded shadow">
+            <h2 className="text-sm uppercase text-gray-500">Date Range</h2>
+            <p className="mt-2">{formatDate(startDate)} - {formatDate(endDate)}</p>
+          </div>
+          <div className="p-4 bg-white rounded shadow">
+            <h2 className="text-sm uppercase text-gray-500">Transactions</h2>
+            <p className="text-2xl font-semibold mt-2">{filtered.length}</p>
           </div>
         </div>
-      </div>
 
-      {/* Transactions Section */}
-      <div className="bg-white p-6 rounded-lg shadow-md mb-8">
-        <h3 className="font-semibold text-lg text-gray-900 mb-4">Transactions</h3>
-
-        {/* Search Bar */}
-        <div className="flex justify-between mb-4">
+        <div className="flex flex-wrap gap-4 mb-6">
           <input
             type="text"
             placeholder="Search User"
-            className="p-2 w-1/3 border rounded-md text-sm"
+            value={searchUser}
+            onChange={e => setSearchUser(e.target.value)}
+            className="flex-grow p-2 border rounded text-sm"
+          />
+          <input
+            type="text"
+            placeholder="Search Course"
+            value={searchCourse}
+            onChange={e => setSearchCourse(e.target.value)}
+            className="flex-grow p-2 border rounded text-sm"
           />
           <select
-            aria-label="Filter by type"
-            className="p-2 border rounded-md text-sm"
+            value={filterStatus}
+            onChange={e => setFilterStatus(e.target.value)}
+            className="p-2 border rounded text-sm"
           >
-            <option value="">Filter by Type</option>
-            <option value="credit">Credit</option>
-            <option value="debit">Debit</option>
+            <option value="">All Status</option>
+            {['SUCCESS', 'FAIL', 'ERROR', 'INITIAL'].map(s => (
+              <option key={s} value={s}>{s.charAt(0)+s.slice(1).toLowerCase()}</option>
+            ))}
           </select>
+          <input
+            type="date"
+            value={formatDate(startDate)}
+            onChange={e => setStartDate(new Date(e.target.value))}
+            className="p-2 border rounded text-sm"
+          />
+          <input
+            type="date"
+            value={formatDate(endDate)}
+            onChange={e => setEndDate(new Date(e.target.value))}
+            className="p-2 border rounded text-sm"
+          />
         </div>
 
-        {/* Transactions Table */}
-        <div className="overflow-x-auto">
-          <table className="min-w-full table-auto text-sm">
-            <thead className="bg-gray-100">
-              <tr className="text-left">
-                <th className="p-3 text-gray-600">Customer</th>
-                <th className="p-3 text-gray-600">Date</th>
-                <th className="p-3 text-gray-600">Type</th>
-                <th className="p-3 text-gray-600">Amount</th>
-              </tr>
-            </thead>
-            <tbody>
-              {[1, 2, 3, 4, 5].map((_, index) => (
-                <tr key={index} className="border-b hover:bg-gray-50">
-                  <td className="p-3">Jon Doe</td>
-                  <td className="p-3">12/04/2024</td>
-                  <td className="p-3">Credit</td>
-                  <td className="p-3">$95.00</td>
+        <div className="bg-white p-6 rounded-lg shadow mb-8">
+          <div className="w-full h-64">
+            <Line data={chartData} options={chartOptions} />
+          </div>
+        </div>
+
+        <div className="bg-white p-6 rounded-lg shadow">
+          <h3 className="font-semibold text-lg mb-4">Transactions</h3>
+          <div className="overflow-x-auto">
+            <table className="min-w-full table-auto text-sm">
+              <thead className="bg-gray-100">
+                <tr>
+                  <th className="p-2">ID</th>
+                  <th className="p-2">Course</th>
+                  <th className="p-2">User</th>
+                  <th className="p-2">Date</th>
+                  <th className="p-2">Status</th>
+                  <th className="p-2">Amount</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {filtered.map(d => (
+                  <tr key={d.id} className="border-b hover:bg-gray-50">
+                    <td className="p-2">{d.id}</td>
+                    <td className="p-2">{d.courseName}</td>
+                    <td className="p-2">{d.userName}</td>
+                    <td className="p-2">{d.date.split('T')[0]}</td>
+                    <td className={`p-2 rounded ${statusColor(d.status)}`}>{d.status}</td>
+                    <td className="p-2">${d.price.toFixed(2)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
     </div>
   );
-};
-
-export default Revenue;
+}

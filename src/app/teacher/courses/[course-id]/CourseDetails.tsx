@@ -72,17 +72,17 @@ const CourseDetails: React.FC = () => {
       credentials: "include",
     })
       .then(res => res.json())
-      .then((data: Course) => {
-        setCourse(data);
+      .then((data) => {
+        setCourse(data.data);
         // populate form state
-        setCourseName(data.courseName);
-        setCoursePrice(String(data.price));
-        setCategory(data.category);
-        setLevel(data.level);
-        setDescription(data.description);
-        setStatus(data.status);
-        setIntroImage(data.urlAvt);
-        setIntroVideo(data.urlIntro);
+        setCourseName(data.data.courseName);
+        setCoursePrice(String(data.data.price));
+        setCategory(data.data.category);
+        setLevel(data.data.level);
+        setDescription(data.data.description);
+        setStatus(data.data.status);
+        setIntroImage(data.data.urlAvt);
+        setIntroVideo(data.data.urlIntro);
       })
       .catch(console.error);
   }, [courseId]);

@@ -47,6 +47,12 @@ const Sidebar: React.FC<SidebarProps> = ({ pathname }) => {
               <span>Revenue</span>
             </div>
           </Link>
+          <Link href="/teacher/payout">
+            <div className={`flex items-center space-x-2 p-4 ${pathname === 'payout' ? 'bg-blue-600' : ''}`}>
+              <FaDollarSign />
+              <span>Payout</span>
+            </div>
+          </Link>
           <Link href="/teacher/settings">
             <div className={`flex items-center space-x-2 p-4 ${pathname === 'setting' ? 'bg-blue-600' : ''}`}>
               <FaCog />

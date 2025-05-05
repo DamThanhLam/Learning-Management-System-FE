@@ -1,5 +1,8 @@
 "use client";
 
+import { BASE_URL_PAYMENT_SERVICE } from "@/utils/BaseURL";
+import { useEffect } from "react";
+
 // Component WorkspaceNameSection
 const WorkspaceNameSection = () => {
   return (
@@ -69,6 +72,12 @@ const WorkspaceSettings = () => {
 
 // Component chính của trang
 export default function Page() {
+  useEffect(()=>{
+    fetch(BASE_URL_PAYMENT_SERVICE+"/admin",{
+      credentials:"include"
+    }).then(res=> res.json())
+    .then(data => console.log(data))
+  },[])
   return (
     <div className="flex">
       <WorkspaceSettings />
