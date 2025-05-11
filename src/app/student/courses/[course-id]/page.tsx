@@ -2,9 +2,8 @@
 
 import React, { useState, useEffect } from 'react'
 import BuyCourseCard from '@/components/course/BuyCourseCard'
-import { useRouter } from 'next/navigation'
-import { EditorContent, useEditor } from '@tiptap/react'
-import StarterKit from '@tiptap/starter-kit'
+import { BASE_URL_COURSE_SERVICE, BASE_URL_REVIEW_SERVICE, BASE_URL_USER_SERVICE } from '@/utils/BaseURL'
+import { toast } from 'react-toastify'
 
 interface Course {
   courseName: string
@@ -42,12 +41,8 @@ export default function CourseDetailsPage({ params }: { params: Promise<{ 'cours
   const [error, setError] = useState<string | null>(null)
   const [activeTab, setActiveTab] = useState<'teacher' | 'reviews'>('teacher') // Tab state
   const [reviews, setReviews] = useState<any[]>([]) // Reviews fetched from the API
-  const router = useRouter();
-  const editor = useEditor({
-    extensions: [StarterKit],
-    content: "", // Đưa dữ liệu vào editor
-    editable: false, // Không cho sửa
-  })
+  const [isPurchased, setIsPurchased] = useState<boolean>(false) // Tracks if the course is purchased
+
   useEffect(() => {
     const resolveParams = async () => {
       const resolvedParams = await params
@@ -75,7 +70,6 @@ export default function CourseDetailsPage({ params }: { params: Promise<{ 'cours
         console.log(responseData)
         setCourse(responseData.data) // Use the `data` field from the response
 
-        editor?.commands.setContent(responseData.data ? responseData.data.description : "")
         // Fetch teacher details after course data is loaded
         if (responseData.data.teacherId) {
           fetchTeacherDetails(responseData.data.teacherId)
@@ -89,9 +83,30 @@ export default function CourseDetailsPage({ params }: { params: Promise<{ 'cours
     }
 
     fetchCourseDetails()
+    fetchPurchaseStatus(courseId) // Check if the course has been purchased
   }, [courseId])
 
+  const fetchPurchaseStatus = async (courseId: string) => {
+    try {
+      const response = await fetch(`${BASE_URL_COURSE_SERVICE}/check-course-purchase?courseId=${courseId}`, {
+        method: 'GET',
+        credentials: 'include' // Include cookies for authentication
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to check course purchase status.')
+      }
+
+      const data = await response.json()
+      console.log('Purchase Status API Response:', data) // Debug log
+      setIsPurchased(data.purchased) // Update the state based on the API response
+    } catch (error) {
+      console.error('Error checking course purchase status:', error)
+    }
+  }
+
   const fetchTeacherDetails = async (teacherId: string) => {
+    console.log(`LMAOOOO teacher ${BASE_URL_USER_SERVICE}?id=${teacherId}`)
     try {
       const response = await fetch(`${BASE_URL_USER_SERVICE}?id=${teacherId}`, {
         method: 'GET',
@@ -116,6 +131,7 @@ export default function CourseDetailsPage({ params }: { params: Promise<{ 'cours
 
     const fetchReviews = async () => {
       try {
+        console.log('Fetching reviews for courseId:', courseId) // Debug log
         const response = await fetch(`${BASE_URL_REVIEW_SERVICE}/get-reviews-by-courseId?courseId=${courseId}`, {
           method: 'GET',
           credentials: 'include'
@@ -155,17 +171,13 @@ export default function CourseDetailsPage({ params }: { params: Promise<{ 'cours
       case 'teacher':
         const teacherData = teacher || dummyTeacher // Use fetched teacher or fallback
         return (
-          <div className='cursor-pointer'
-            onClick={() => {
-              router.replace("/student/mentors?id=" + teacherData.id)
-            }}>
+          <div>
             <h2 className="text-xl font-bold mb-3">About the Teacher</h2>
             <div className="flex items-center gap-4">
               <img
                 src={teacherData.urlImage || 'https://via.placeholder.com/150'} // Fallback for missing image
                 alt={teacherData.userName || 'Unknown Teacher'}
-                className="w-20 h-20 rounded-full border border-gray-300 cursor-pointer"
-
+                className="w-20 h-20 rounded-full border border-gray-300"
               />
               <div>
                 <p className="text-lg font-semibold">{teacherData.userName || 'Unknown Teacher'}</p>
@@ -190,7 +202,21 @@ export default function CourseDetailsPage({ params }: { params: Promise<{ 'cours
                     <p className="font-semibold">{review.userName}</p>
                   </div>
                   <p className="text-gray-700">{review.content}</p>
-                  <p className="text-yellow-500">{review.rating} ★</p>
+                  {/* Render the correct number of yellow and gray stars */}
+                  <p className="text-yellow-500 flex">
+                    {/* Render yellow stars */}
+                    {Array.from({ length: review.review }, (_, i) => (
+                      <span key={`yellow-${i}`} className="text-yellow-500">
+                        ★
+                      </span>
+                    ))}
+                    {/* Render gray stars */}
+                    {Array.from({ length: 5 - review.review }, (_, i) => (
+                      <span key={`gray-${i}`} className="text-gray-300">
+                        ★
+                      </span>
+                    ))}
+                  </p>
                 </div>
               ))}
             </div>
@@ -236,24 +262,6 @@ export default function CourseDetailsPage({ params }: { params: Promise<{ 'cours
   if (!course) {
     return <p>Course not found.</p>
   }
-  const handleAddToCart = ()=>{
-    fetch(BASE_URL_COURSE_SERVICE+"/shopping-cart",{
-      method:"POST",
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json'
-      },
-      credentials:"include",
-      body:JSON.stringify({courseId})
-    }).then(res =>res.json())
-    .then(data=>{
-      router.push("/student/shopping-cart")
-    })
-    .catch(error=> alert(error))
-  }
-  const handleBuyNow=()=>{
-    router.push('/student/shopping-cart/checkout?courseIds='+courseId)
-  }
 
   return (
     <div className="flex flex-col items-center min-h-screen bg-white p-5 w-full">
@@ -265,12 +273,8 @@ export default function CourseDetailsPage({ params }: { params: Promise<{ 'cours
         <div className="flex flex-col md:flex-row gap-8">
           <div className="flex-[3]">
             <h1 className="text-5xl font-bold mb-3">{course.courseName}</h1>
-            <div className="p-4 min-h-[150px] prose max-w-none list-inside">
-              <EditorContent
-                editor={editor}
-                className="focus:outline-none"
-              />
-            </div>
+            {/* Render the description with HTML tags */}
+            <div className="text-xl text-gray-700 mb-3" dangerouslySetInnerHTML={{ __html: course.description }}></div>
             <p className="text-xl text-yellow-500 font-bold mb-3">
               {(course.totalReview || 0).toFixed(1)} ★ ({course.countReviews || 0} ratings) | {course.countLectures || 0} Lectures | {course.level || 'N/A'}
             </p>
@@ -281,8 +285,10 @@ export default function CourseDetailsPage({ params }: { params: Promise<{ 'cours
             <BuyCourseCard
               urlAvt={course.urlAvt || 'https://via.placeholder.com/150'}
               price={course.price || 0}
-              onAddToCart={() => handleAddToCart()}
-              onBuyNow={() => handleBuyNow()}
+              purchased={isPurchased} // Pass the purchased status
+              onAddToCart={() => handleAddToCart(courseId!)} // Ensure courseId is not null
+              onBuyNow={() => console.log('Buy Now clicked')}
+              onLearnNow={() => (window.location.href = `/student/courses/${courseId}/learn`)} // Redirect to the learning page
             />
           </div>
         </div>
@@ -292,18 +298,12 @@ export default function CourseDetailsPage({ params }: { params: Promise<{ 'cours
       <div className="w-full max-w-6xl bg-white rounded-lg shadow-lg p-8 mt-8">
         <div className="flex gap-4 border-b border-gray-300 pb-2">
           <button
-            className={`px-4 py-2 font-semibold ${activeTab === 'teacher'
-              ? 'text-blue-500 border-b-2 border-blue-500'
-              : 'text-gray-500'
-              }`}
+            className={`px-4 py-2 font-semibold ${activeTab === 'teacher' ? 'text-blue-500 border-b-2 border-blue-500' : 'text-gray-500'}`}
             onClick={() => setActiveTab('teacher')}>
             Teacher
           </button>
           <button
-            className={`px-4 py-2 font-semibold ${activeTab === 'reviews'
-              ? 'text-blue-500 border-b-2 border-blue-500'
-              : 'text-gray-500'
-              }`}
+            className={`px-4 py-2 font-semibold ${activeTab === 'reviews' ? 'text-blue-500 border-b-2 border-blue-500' : 'text-gray-500'}`}
             onClick={() => setActiveTab('reviews')}>
             Reviews
           </button>
