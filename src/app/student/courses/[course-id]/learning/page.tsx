@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react'
 import TeacherCard from '@/components/teacher/TeacherCard'
 // import StudentCourseCard from '@/components/course/StudentCourseCard'
 import SimpleReviewCard from '@/components/review/SimpleReviewCard'
-import { BASE_URL_COURSE_SERVICE, BASE_URL_LECTURE_SERVICE, BASE_URL_REVIEW_SERVICE } from '@/utils/BaseURL'
+import { BASE_URL_COURSE_SERVICE, BASE_URL_LECTURE_SERVICE, BASE_URL_REVIEW_SERVICE, BASE_URL_USER_SERVICE } from '@/utils/BaseURL'
 import { useParams } from 'next/navigation'
 
 // CÒN TAB CÁC KHÓA HỌC LIÊN QUAN (RELATED COURSES) SẼ TRIỂN KHAI
@@ -62,7 +62,6 @@ const fetchLectures = async (courseId: string, chapter?: number) => {
     }
 
     const data = await response.json()
-    console.log(data)
     return data.lectures.map((lecture: any) => ({
       id: lecture.id,
       courseId: lecture.courseId,
@@ -134,30 +133,68 @@ const checkIfReviewed = async (courseId: string, userId: string) => {
   }
 }
 
-const ReviewSection = ({ courseId, userId }: { courseId: string | null; userId: string }) => {
-  console.log('Received courseId in ReviewSection:', courseId) // Debugging
-  console.log('Received userId in ReviewSection:', userId) // Debugging
-
+const ReviewSection = ({ courseId }: { courseId: string | null }) => {
+  const [reviews, setReviews] = useState<any[]>([]) // Stores all reviews for the course
+  const [userReview, setUserReview] = useState<any | null>(null) // Stores the logged-in user's review
+  const [reviewed, setReviewed] = useState<boolean>(false) // Indicates if the user has reviewed the course
   const [content, setContent] = useState('')
   const [rating, setRating] = useState<number | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
-  const [hasReviewed, setHasReviewed] = useState<boolean>(false)
 
   useEffect(() => {
-    if (!courseId) return // Prevent fetching review status if courseId is not available
+    if (!courseId) return
 
-    const fetchReviewStatus = async () => {
+    const fetchReviews = async () => {
       try {
-        const reviewed = await checkIfReviewed(courseId, userId)
-        setHasReviewed(reviewed)
+        // Fetch all reviews for the course
+        const response = await fetch(`${BASE_URL_REVIEW_SERVICE}/get-reviews-by-courseId?courseId=${courseId}`, {
+          method: 'GET',
+          credentials: 'include'
+        })
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch reviews.')
+        }
+
+        const data = await response.json()
+        console.log('Reviews API Response:', data) // Debug log
+        setReviews(data.data || []) // Set all reviews for the course
       } catch (error) {
+        console.error('Error fetching reviews:', error)
+        setError('Failed to fetch reviews. Please try again later.')
+      }
+    }
+
+    const fetchUserReviewStatus = async () => {
+      try {
+        // Check if the user has reviewed the course
+        const response = await fetch(`${BASE_URL_REVIEW_SERVICE}/reviewed?courseId=${courseId}`, {
+          method: 'GET',
+          credentials: 'include'
+        })
+
+        if (!response.ok) {
+          throw new Error('Failed to check review status.')
+        }
+
+        const data = await response.json()
+        console.log('User Review API Response:', data) // Debug log
+        setReviewed(data.reviewed) // Set the reviewed status
+
+        // If the user has reviewed, fetch their review
+        if (data.reviewed && data.data) {
+          setUserReview(data.data) // Set the user's review directly from the API response
+        }
+      } catch (error) {
+        console.error('Error checking review status:', error)
         setError('Failed to check review status. Please try again later.')
       }
     }
 
-    fetchReviewStatus()
-  }, [courseId, userId])
+    fetchReviews()
+    fetchUserReviewStatus()
+  }, [courseId])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -177,79 +214,120 @@ const ReviewSection = ({ courseId, userId }: { courseId: string | null; userId: 
     formData.append('content', content)
     formData.append('review', rating.toString())
 
-    // Debugging: Log the FormData
-    for (const [key, value] of formData.entries()) {
-      console.log(`${key}: ${value}`)
-    }
-
     try {
       setError(null)
       const response = await submitReview(formData)
       setSuccess('Review submitted successfully!')
       setContent('')
       setRating(null)
-      setHasReviewed(true) // Mark as reviewed after successful submission
+
+      // Update the user's review and the reviews list
+      const newReview = response.data
+      console.log('Newly Submitted Review:', newReview) // Log the new review
+      setUserReview(newReview)
+      setReviews((prevReviews) => prevReviews.filter((review) => review.id !== newReview.id)) // Remove old user review if any
+      setReviewed(true) // Mark the user as having reviewed
     } catch (err: any) {
       setError(err.message || 'Failed to submit review. Please try again.')
     }
   }
 
-  if (hasReviewed) {
-    return (
-      <div className="mt-5 p-6 border border-gray-300 rounded-lg shadow-md bg-white">
-        <h3 className="text-lg font-semibold mb-4 text-gray-800">Your Review</h3>
-        <p>You have already submitted a review for this course.</p>
-      </div>
-    )
-  }
+  console.log('Reviewed State:', reviewed) // Log the reviewed state
+  console.log('User Review State:', userReview) // Log the userReview state
+  console.log('Reviews Array:', reviews) // Log the reviews array
 
   return (
-    <div className="mt-5 p-6 border border-gray-300 rounded-lg shadow-md bg-white">
-      <h3 className="text-lg font-semibold mb-4 text-gray-800">Submit a Review</h3>
-      {error && <p className="text-red-500 mb-3">{error}</p>}
-      {success && <p className="text-green-500 mb-3">{success}</p>}
-      <form onSubmit={handleSubmit} className="space-y-6">
-        <div>
-          <label htmlFor="content" className="block text-sm font-medium text-gray-700 mb-1">
-            Review Content
-          </label>
-          <textarea
-            id="content"
-            value={content}
-            onChange={(e) => setContent(e.target.value)}
-            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-3 focus:ring-blue-500 focus:border-blue-500"
-            rows={4}
-            placeholder="Write your review here..."
-            required
-          />
+    <div className="mt-5">
+      <h3 className="text-xl font-bold mb-4">Reviews</h3>
+
+      {/* Display the user's review at the top if it exists */}
+      {reviewed && userReview && (
+        <div className="p-4 border border-gray-300 rounded-lg shadow-md bg-blue-100 mb-6">
+          <h4 className="text-lg font-semibold mb-2 text-gray-800">Your Review</h4>
+          <p className="text-gray-700 mb-2">{userReview.content}</p>
+          <p className="text-yellow-500">{userReview.review} ★</p>
         </div>
-        <div>
-          <label htmlFor="rating" className="block text-sm font-medium text-gray-700 mb-1">
-            Rating
-          </label>
-          <select
-            id="rating"
-            value={rating || ''}
-            onChange={(e) => setRating(Number(e.target.value))}
-            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-3 focus:ring-blue-500 focus:border-blue-500"
-            required>
-            <option value="" disabled>
-              Select a rating
-            </option>
-            {[1, 2, 3, 4, 5].map((star) => (
-              <option key={star} value={star}>
-                {star} Star{star > 1 ? 's' : ''}
-              </option>
-            ))}
-          </select>
+      )}
+
+      {/* Display the form if the user hasn't submitted a review */}
+      {!reviewed && (
+        <div className="p-6 border border-gray-300 rounded-lg shadow-md bg-white mb-6">
+          <h4 className="text-lg font-semibold mb-4 text-gray-800">Submit a Review</h4>
+          {error && <p className="text-red-500 mb-3">{error}</p>}
+          {success && <p className="text-green-500 mb-3">{success}</p>}
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div>
+              <label htmlFor="content" className="block text-sm font-medium text-gray-700 mb-1">
+                Review Content
+              </label>
+              <textarea
+                id="content"
+                value={content}
+                onChange={(e) => setContent(e.target.value)}
+                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-3 focus:ring-blue-500 focus:border-blue-500"
+                rows={4}
+                placeholder="Write your review here..."
+                required
+              />
+            </div>
+            <div>
+              <label htmlFor="rating" className="block text-sm font-medium text-gray-700 mb-1">
+                Rating
+              </label>
+              <select
+                id="rating"
+                value={rating || ''}
+                onChange={(e) => setRating(Number(e.target.value))}
+                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-3 focus:ring-blue-500 focus:border-blue-500"
+                required>
+                <option value="" disabled>
+                  Select a rating
+                </option>
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <option key={star} value={star}>
+                    {star} Star{star > 1 ? 's' : ''}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <button
+              type="submit"
+              className="w-full px-4 py-2 bg-blue-500 text-white font-semibold rounded-lg shadow-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2"
+              disabled={!courseId}>
+              Submit Review
+            </button>
+          </form>
         </div>
-        <button
-          type="submit"
-          className="w-full px-4 py-2 bg-blue-500 text-white font-semibold rounded-lg shadow-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2"
-          disabled={!courseId}>
-          Submit Review
-        </button>
-      </form>
+      )}
+
+      {/* Display all reviews */}
+      <div className="space-y-4">
+        {reviews.length > 0 ? (
+          reviews.map((review) => (
+            <div key={review.id} className="p-4 border border-gray-300 rounded-lg shadow-md bg-white">
+              <p className="text-gray-700 mb-2">{review.content}</p>
+              {/* Render the correct number of yellow and gray stars */}
+              <p className="flex">
+                {/* Render yellow stars */}
+                {Array.from({ length: review.review }, (_, i) => (
+                  <span key={`yellow-${i}`} className="text-yellow-500">
+                    ★
+                  </span>
+                ))}
+                {/* Render gray stars */}
+                {Array.from({ length: 5 - review.review }, (_, i) => (
+                  <span key={`gray-${i}`} className="text-gray-300">
+                    ★
+                  </span>
+                ))}
+              </p>
+              <p className="text-sm text-gray-500">By {review.userName}</p>
+            </div>
+          ))
+        ) : (
+          <p>No reviews available for this course.</p>
+        )}
+      </div>
     </div>
   )
 }
@@ -257,13 +335,35 @@ const ReviewSection = ({ courseId, userId }: { courseId: string | null; userId: 
 export default function CoursePage() {
   const params = useParams() // Extract params from the dynamic route
   const courseId = params['course-id'] // Get the courseId from the dynamic route
-  console.log('Extracted courseId from path:', courseId) // Debugging
 
   const [course, setCourse] = useState<Course | null>(null)
   const [selectedLecture, setSelectedLecture] = useState<Lecture | null>(null)
   const [activeTab, setActiveTab] = useState<'description' | 'teacher' | 'reviews'>('description')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [teacher, setTeacher] = useState<any | null>(null) // Declare teacher state here
+
+  // Move fetchTeacherDetails below the state declarations
+  const fetchTeacherDetails = async (teacherId: string) => {
+    console.log(`Fetching teacher details from ${BASE_URL_USER_SERVICE}?id=${teacherId}`)
+    try {
+      const response = await fetch(`${BASE_URL_USER_SERVICE}?id=${teacherId}`, {
+        method: 'GET',
+        credentials: 'include'
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch teacher details.')
+      }
+
+      const data = await response.json()
+      console.log('Teacher API Response:', data) // Log the API response
+      setTeacher(data.user) // Use setTeacher after it's declared
+    } catch (error) {
+      console.error('Error fetching teacher details:', error)
+      setTeacher(null) // Set teacher to null if the API call fails
+    }
+  }
 
   useEffect(() => {
     if (!courseId) {
@@ -288,6 +388,12 @@ export default function CoursePage() {
         }
 
         const courseData = await courseResponse.json()
+
+        // Log the fetched course object
+        console.log('Fetched Course:', JSON.stringify(courseData, null, 2))
+
+        // Fetch teacher details
+        fetchTeacherDetails(courseData.data.teacherId)
 
         // Fetch lectures
         let lecturesData: Lecture[] = []
@@ -348,24 +454,23 @@ export default function CoursePage() {
         return (
           <div className="w-1/4">
             <h2 className="text-xl font-bold mb-3">Teacher</h2>
-            <TeacherCard name={course.teacherName} expertise="N/A" rating={course.totalReview} students={course.studentsId.length} urlAva={course.urlAvt} />
+            {teacher ? (
+              <TeacherCard
+                name={teacher.userName || 'N/A'}
+                expertise={teacher.description || 'N/A'}
+                rating={course.totalReview}
+                students={course.countOrders} // Number of students in this course
+                urlAva={teacher.urlImage || course.urlAvt} // Use teacher's avatar if available
+              />
+            ) : (
+              <p>Loading teacher information...</p>
+            )}
           </div>
         )
       case 'reviews':
-        const currentUserId = 'currentUserId' // Replace with actual logged-in user's ID
         return (
           <div>
-            <h2 className="text-xl font-bold mb-3">Reviews</h2>
-            <div className="space-y-4 w-1/2">
-              {course.reviews?.length > 0 ? (
-                course.reviews.map((review) => (
-                  <SimpleReviewCard key={review.userId} userName={review.userName} urlImage={review.urlImage} content={review.content} review={review.review} />
-                ))
-              ) : (
-                <p>No reviews available.</p>
-              )}
-            </div>
-            <ReviewSection courseId={courseId} userId={currentUserId} />
+            <ReviewSection courseId={courseId} />
           </div>
         )
       default:
