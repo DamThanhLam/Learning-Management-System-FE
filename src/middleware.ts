@@ -93,15 +93,15 @@ export async function middleware(req: NextRequest) {
 
       return response;
     }
-    if (pathParts[0] === 'teacher' && !responseData.groups.includes("TEACHER")) {
-      return NextResponse.redirect(new URL("/", req.url));
-    }
-    if (pathParts[0] === 'admin' && !responseData.groups.includes("ADMIN")) {
-      return NextResponse.redirect(new URL("/", req.url));
-    }
-    if (pathParts[0] === 'student' && !responseData.groups.includes("STUDENT")) {
-      return NextResponse.redirect(new URL("/", req.url));
-    }
+    // if (pathParts[0] === 'teacher' && !responseData.groups.includes("TEACHER")) {
+    //   return NextResponse.redirect(new URL("/", req.url));
+    // }
+    // if (pathParts[0] === 'admin' && !responseData.groups.includes("ADMIN")) {
+    //   return NextResponse.redirect(new URL("/", req.url));
+    // }
+    // if (pathParts[0] === 'student' && !responseData.groups.includes("STUDENT")) {
+    //   return NextResponse.redirect(new URL("/", req.url));
+    // }
     const responseRedirect = NextResponse.next();
 
     responseRedirect.cookies.set("groups", JSON.stringify(responseData.groups), {
