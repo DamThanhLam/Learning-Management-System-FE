@@ -24,6 +24,10 @@ export default function RegisterChoice() {
                 const decoded = decodeURIComponent(cookieValue);
                 const parsed = JSON.parse(decoded);
                 setGroups(parsed);
+                if(parsed.length === 1){
+                    router.push("/" + parsed[0].toLowerCase())
+
+                }
                 console.log("Nhóm quyền:", parsed);
             } catch (e) {
                 console.error("Lỗi khi đọc cookie groups:", e);
