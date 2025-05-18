@@ -6,6 +6,7 @@ interface RequireAccount {
   id: string;
   userName: string;
   email: string;
+  phoneNumber: string;
   birthday: string;
   description: string;
   accountStatus: string;
@@ -27,24 +28,30 @@ function getCookie(name: string) {
   if (parts.length === 2) return parts.pop()?.split(";").shift();
 }
 
-const TeacherReviewModal = ({ selectedApp, setSelectedApp, refreshData }: TeacherReviewModalProps) => {
+const TeacherReviewModal = ({
+  selectedApp,
+  setSelectedApp,
+  refreshData,
+}: TeacherReviewModalProps) => {
   const [adminDescription, setAdminDescription] = useState("");
   const [loading, setLoading] = useState(false);
-  const [selectedAction, setSelectedAction] = useState<"ACCEPT" | "REJECT">("ACCEPT");
+  const [selectedAction, setSelectedAction] = useState<"ACCEPT" | "REJECT">(
+    "ACCEPT"
+  );
 
   const handleDecision = async () => {
     if (!selectedApp?.id) {
       alert("Cannot submit: User ID is missing!");
       return;
     }
-  
+
     if (adminDescription.length < 50 || adminDescription.length > 500) {
       alert("Description must be between 50 and 500 characters.");
       return;
     }
-  
+
     setLoading(true);
-  
+
     try {
       const token = getCookie("access_token");
 
@@ -53,23 +60,24 @@ const TeacherReviewModal = ({ selectedApp, setSelectedApp, refreshData }: Teache
         action: selectedAction,
         description: adminDescription,
       });
-      
-  
-      const res = await fetch("http://localhost:8082/api/v1/teacher/decision-making-create-teacher-account", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: token ? `Bearer ${token}` : "",
-        },
-        credentials: "include",
-        body: JSON.stringify({
-          id: selectedApp.id, 
-          action: selectedAction,
-          description: adminDescription,
-        }),
-      });
-      
-  
+
+      const res = await fetch(
+        "http://localhost:8082/api/v1/teacher/decision-making-create-teacher-account",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: token ? `Bearer ${token}` : "",
+          },
+          credentials: "include",
+          body: JSON.stringify({
+            id: selectedApp.id,
+            action: selectedAction,
+            description: adminDescription,
+          }),
+        }
+      );
+
       const data = await res.json();
       if (res.ok) {
         alert(data.data || "Success");
@@ -85,7 +93,6 @@ const TeacherReviewModal = ({ selectedApp, setSelectedApp, refreshData }: Teache
       setLoading(false);
     }
   };
-  
 
   if (!selectedApp) return null;
 
@@ -101,10 +108,15 @@ const TeacherReviewModal = ({ selectedApp, setSelectedApp, refreshData }: Teache
         </button>
 
         {/* Nội dung */}
-        <div className="overflow-y-auto p-8" style={{ maxHeight: "calc(95vh - 40px)" }}>
+        <div
+          className="overflow-y-auto p-8"
+          style={{ maxHeight: "calc(95vh - 40px)" }}
+        >
           {/* Thông tin User */}
           <div className="space-y-6">
-            <h2 className="text-2xl font-bold text-center text-gray-800 mb-6">Teacher Information</h2>
+            <h2 className="text-2xl font-bold text-center text-gray-800 mb-6">
+              Teacher Information
+            </h2>
 
             <div className="flex flex-col items-center space-y-4">
               <img
@@ -114,16 +126,28 @@ const TeacherReviewModal = ({ selectedApp, setSelectedApp, refreshData }: Teache
               />
 
               <div className="text-center space-y-2">
-                <h3 className="text-xl font-semibold text-gray-900">{selectedApp.userName}</h3>
+                <h3 className="text-xl font-semibold text-gray-900">
+                  {selectedApp.userName}
+                </h3>
                 <p className="text-gray-600">{selectedApp.email}</p>
-                <p className="text-gray-600">Birthday: {selectedApp.birthday}</p>
-                <p className="text-gray-600">Gender: {selectedApp.gender.toLowerCase()}</p>
-                <p className="text-gray-600">Account Status: {selectedApp.accountStatus}</p>
+                <p className="text-gray-600">
+                  Birthday: {selectedApp.birthday}
+                </p>
+                <p className="text-gray-600">
+                  Gender:{" "}
+                  {selectedApp.gender ? selectedApp.gender.toLowerCase() : "-"}
+                </p>
+
+                <p className="text-gray-600">
+                  Account Status: {selectedApp.accountStatus}
+                </p>
               </div>
 
               {/* Description */}
               <div className="w-full">
-                <h4 className="text-lg font-semibold text-gray-800 mb-2">Self Description:</h4>
+                <h4 className="text-lg font-semibold text-gray-800 mb-2">
+                  Self Description:
+                </h4>
                 <p className="text-gray-700 whitespace-pre-line p-4 border rounded bg-gray-50 max-h-40 overflow-y-auto">
                   {selectedApp.description}
                 </p>
@@ -132,7 +156,9 @@ const TeacherReviewModal = ({ selectedApp, setSelectedApp, refreshData }: Teache
               {/* CV Preview */}
               {selectedApp.cvFile && (
                 <div className="w-full">
-                  <h4 className="text-lg font-semibold text-gray-800 mb-2">CV Preview:</h4>
+                  <h4 className="text-lg font-semibold text-gray-800 mb-2">
+                    CV Preview:
+                  </h4>
                   <div className="border rounded overflow-hidden h-80 bg-gray-100">
                     <iframe
                       src={`https://docs.google.com/gview?url=https://lam-dev-iuh.s3.ap-southeast-1.amazonaws.com/${selectedApp.cvFile}&embedded=true`}
@@ -159,7 +185,9 @@ const TeacherReviewModal = ({ selectedApp, setSelectedApp, refreshData }: Teache
 
           {/* Phần quyết định của Admin */}
           <div className="space-y-4">
-            <h2 className="text-2xl font-bold text-center text-gray-800 mb-6">Admin Decision</h2>
+            <h2 className="text-2xl font-bold text-center text-gray-800 mb-6">
+              Admin Decision
+            </h2>
 
             <div className="flex flex-col space-y-4">
               {/* Admin nhập mô tả */}
@@ -174,10 +202,14 @@ const TeacherReviewModal = ({ selectedApp, setSelectedApp, refreshData }: Teache
               <select
                 title="Select Action"
                 value={selectedAction}
-                onChange={(e) => setSelectedAction(e.target.value as "ACCEPT" | "REJECT")}
+                onChange={(e) =>
+                  setSelectedAction(e.target.value as "ACCEPT" | "REJECT")
+                }
                 className="w-full p-2 border rounded-md bg-gray-50 focus:ring-2 focus:ring-blue-400"
               >
-                <option defaultValue={"ACCEPT"} value="ACCEPT">Accept Teacher</option>
+                <option defaultValue={"ACCEPT"} value="ACCEPT">
+                  Accept Teacher
+                </option>
                 <option value="REJECT">Reject Teacher</option>
               </select>
 
