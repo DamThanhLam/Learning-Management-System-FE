@@ -59,6 +59,7 @@ const Login: React.FC = () => {
       .then(data => {
         console.log(data)
         if (data.code === 200) {
+          window.localStorage.setItem("email", email)
           window.location.href = "/"
         }
         else alert("Error: " + data.message)
@@ -70,49 +71,6 @@ const Login: React.FC = () => {
 
   };
 
-  // Step 2: Tự động đăng nhập nếu link hợp lệ
-  useEffect(() => {
-
-    if (isSignInWithEmailLink(auth, window.location.href)) {
-      let storedEmail = window.localStorage.getItem('emailForSignIn');
-      if (!storedEmail) {
-        storedEmail = window.prompt('Vui lòng nhập lại email của bạn để xác nhận đăng nhập:');
-      }
-
-      if (storedEmail) {
-        signInWithEmailLink(auth, storedEmail, window.location.href)
-          .then((result) => {
-            console.log(result)
-            fetch(BASE_URL_USER_SERVICE + "/login", {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify({ email: window.localStorage.getItem('emailForSignIn'), password: window.localStorage.getItem('passwordForSignIn') }),
-              credentials: "include",
-            }).then(res => res.json())
-              .then(data => {
-                console.log(data)
-                if (data.code === 200) {
-                  window.location.href = "/"
-                }
-                else alert("Error: " + data.message)
-              }).catch(e => {
-                alert("Error: " + e)
-              })
-
-            window.localStorage.removeItem('emailForSignIn');
-            window.localStorage.removeItem('passwordForSignIn');
-            console.log('Đăng nhập thành công!');
-
-            // redirect to dashboard or set user context here
-          })
-          .catch((error) => {
-            console.log('Đăng nhập thất bại: ' + error.message);
-          });
-      }
-    }
-  }, []);
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-100">
@@ -150,7 +108,7 @@ const Login: React.FC = () => {
               placeholder="Nhập mật khẩu của bạn"
             />
           </div>
-          <a href="/register" style={{ display: 'block', textAlign: 'right', color: "blue", textDecorationLine: 'underline' }}>Don't have an account?</a>
+          <a href="/forgot-password" style={{ display: 'block', textAlign: 'right', color: "blue", textDecorationLine: 'underline' }}>forgot password</a>
 
           {/* Nút Đăng Nhập */}
           <button
@@ -159,6 +117,7 @@ const Login: React.FC = () => {
           >
             Đăng Nhập
           </button>
+          <a href="/register" style={{ display: 'block', textAlign: 'center', color: "blue", textDecorationLine: 'underline' }}>Don't have an account?</a>
         </form>
       </div>
     </div>

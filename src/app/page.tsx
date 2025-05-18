@@ -7,6 +7,7 @@ import { User, GraduationCap } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { getAuth, isSignInWithEmailLink, signInWithEmailLink } from "firebase/auth";
+import { BASE_URL_USER_SERVICE } from "@/utils/BaseURL";
 
 export default function RegisterChoice() {
     const router = useRouter();
@@ -33,6 +34,16 @@ export default function RegisterChoice() {
                 console.error("Lỗi khi đọc cookie groups:", e);
             }
         }
+
+        fetch(BASE_URL_USER_SERVICE+"/own",{
+            credentials:"include"
+        })
+        .then(res => res.json())
+        .then(data=>{
+            if(!data.user || !data.user.verifiedEmail){
+                window.location.href="/verify-otp"
+            }
+        })
         
     }, []);
 

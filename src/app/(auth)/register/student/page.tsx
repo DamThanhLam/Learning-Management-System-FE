@@ -52,7 +52,8 @@ const StudentRegistration = () => {
 
       if (response.ok) {
         setRegistered(true);
-        router.push("/login");
+        window.localStorage.setItem("email", email)
+        router.push("/verify-otp");
       } else {
         alert("Đăng ký thất bại!");
       }

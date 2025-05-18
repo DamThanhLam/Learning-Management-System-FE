@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
+import { BASE_URL_TEACHER_MANAGEMENT_SERVICE } from "@/utils/BaseURL";
 
 const FeedbackForm = () => {
   const [formData, setFormData] = useState({
@@ -50,7 +51,7 @@ const FeedbackForm = () => {
 
     try {
       const response = await fetch(
-        "http://localhost:8082/api/v1/teacher/require-create-teacher-account",
+        BASE_URL_TEACHER_MANAGEMENT_SERVICE+"/require-create-teacher-account",
         {
           method: "POST",
           body: form,

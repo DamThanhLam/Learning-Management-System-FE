@@ -14,7 +14,7 @@ import {
     Tooltip,
     ResponsiveContainer,
 } from 'recharts'
-import Sidebar from '@/components/course/Sidebar'
+import Sidebar from '@/components/teacher/Sidebar'
 import { BASE_URL_COURSE_SERVICE, BASE_URL_STATISTICAL_SERVICE } from '@/utils/BaseURL'
 
 export default function Dashboard() {
