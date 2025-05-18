@@ -32,7 +32,12 @@ const TeacherApplication = () => {
   const [pageSize, setPageSize] = useState(5);
   const [totalPages, setTotalPages] = useState(1); // tổng số trang (nếu backend trả về tổng record)
   const [showColumns, setShowColumns] = useState(false);
+  const [showDetailModal, setShowDetailModal] = useState(false);
 
+  const [detailModalContent, setDetailModalContent] = useState<{
+    title: string;
+    value: string;
+  }>({ title: "", value: "" });
   // Danh sách các cột có thể hiển thị
   const columns: {
     key: keyof RequireAccount | "status" | "action";
@@ -70,88 +75,87 @@ const TeacherApplication = () => {
     birthday: "",
     gender: "",
     description: "",
-    hasAvatar: "",
-    hasCv: "",
+    hasAva: undefined as boolean | undefined,
+    hasCV: undefined as boolean | undefined,
   });
   const [showAdvanced, setShowAdvanced] = useState(false);
-  const fetchData = useCallback(
-    async (typeInput?: string, pageInput?: number) => {
-      try {
-        const token = getCookie("access_token");
+  const [statusCounts, setStatusCounts] = useState<Record<string, number>>({});
+  const fetchCounts = async () => {
+    try {
+      const token = getCookie("access_token");
 
-        let url = "http://localhost:8082/api/v1/teacher/get-all-account";
-
-        const params = new URLSearchParams();
-        const selectedType = typeInput || type;
-        const selectedPage = pageInput ?? page;
-
-        if (selectedType !== "all")
-          params.append("accountStatus", selectedType);
-        if (keyword) params.append("keyword", keyword);
-        if (advancedFilters.userName)
-          params.append("userName", advancedFilters.userName);
-        if (advancedFilters.email)
-          params.append("email", advancedFilters.email);
-        if (advancedFilters.birthday)
-          params.append("birthday", advancedFilters.birthday);
-
-        params.append("page", selectedPage.toString());
-        params.append("pageSize", pageSize.toString());
-        params.append("role", "STUDENT");
-
-        if (params.toString()) url += `?${params.toString()}`;
-
-        const res = await fetch(url, {
+      const res = await fetch(
+        `http://localhost:8082/api/v1/teacher/count?role=STUDENT`,
+        {
           headers: {
             "Content-Type": "application/json",
             Authorization: token ? `Bearer ${token}` : "",
           },
           credentials: "include",
+        }
+      );
+
+      const data = await res.json();
+      setStatusCounts(data);
+    } catch (error) {
+      console.error("Failed to fetch count by status", error);
+    }
+  };
+  const fetchData = useCallback(
+    async (filters: Partial<typeof advancedFilters> = {}) => {
+      try {
+        const token = getCookie("access_token");
+
+        let url = "http://localhost:8082/api/v1/teacher/search";
+
+        const params = new URLSearchParams();
+        if (type !== "all") params.append("accountStatus", type);
+        if (keyword) params.append("keyword", keyword);
+        params.append("page", (page + 1).toString());
+        params.append("pageSize", pageSize.toString());
+        params.append("role", "STUDENT");
+        url += `?${params.toString()}`;
+
+        const res = await fetch(url, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: token ? `Bearer ${token}` : "",
+          },
+          credentials: "include",
+          body: JSON.stringify(filters),
         });
 
         const data = await res.json();
         const accountList = data?.["require-account-list"];
-
         if (accountList) {
-          setApplications(accountList.content || []);
-          setTotalPages(accountList.totalPages || 1);
+          setApplications(accountList);
+          setTotalPages(data?.totalPages || 1);
         }
       } catch (error) {
         console.error("Failed to fetch applications", error);
       }
     },
-    [type, keyword, advancedFilters, page, pageSize]
+    [type, keyword, page, pageSize]
   );
 
   useEffect(() => {
-    fetchData();
-  }, [fetchData]);
+    fetchData(); // gọi không có ad,vancedFilters
+    fetchCounts();
+  }, [type, keyword, page, pageSize, fetchData]);
 
   const handleSearch = () => {
-    fetchData();
+    fetchData(advancedFilters); // truyền advancedFilters lúc này
   };
-
-  // const handleReset = () => {
-  //   setType("all");
-  //   setKeyword("");
-  //   setAdvancedFilters({
-  //     userName: "",
-  //     email: "",
-  //     birthday: "",
-  //   });
-  //   fetchData();
-  // };
 
   const handleNextPage = () => {
     const nextPage = page + 1;
     setPage(nextPage);
-    fetchData(undefined, nextPage); // fetch ngay page mới
   };
 
   const handlePreviousPage = () => {
     const prevPage = Math.max(page - 1, 0);
     setPage(prevPage);
-    fetchData(undefined, prevPage);
   };
 
   return (
@@ -164,37 +168,34 @@ const TeacherApplication = () => {
         {/* Stats */}
         <div className="bg-white p-4 rounded-xl shadow">
           <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
-            {[
-              { label: "ALL", value: 120, color: "bg-blue-100 text-blue-700" },
-              {
-                label: "ACCEPT",
-                value: 45,
-                color: "bg-emerald-100 text-emerald-600",
-              },
-              {
-                label: "REQUIRE",
-                value: 30,
-                color: "bg-amber-100 text-amber-700",
-              },
-              {
-                label: "LOCKED",
-                value: 25,
-                color: "bg-slate-200 text-slate-600",
-              },
-              {
-                label: "REJECT",
-                value: 20,
-                color: "bg-rose-100 text-rose-600",
-              },
-            ].map(({ label, value, color }) => (
-              <div
-                key={label}
-                className={`flex flex-col items-center justify-center py-4 rounded-lg shadow-sm ${color}`}
-              >
-                <div className="text-xl font-bold">{value}</div>
-                <div className="text-xs uppercase tracking-wide">{label}</div>
-              </div>
-            ))}
+            {["ALL", "ACCEPT", "REQUIRE", "LOCKED", "REJECT"].map((status) => {
+              const colors: Record<string, string> = {
+                ALL: "bg-blue-100 text-blue-700",
+                ACCEPT: "bg-emerald-100 text-emerald-600",
+                REQUIRE: "bg-amber-100 text-amber-700",
+                LOCKED: "bg-slate-200 text-slate-600",
+                REJECT: "bg-rose-100 text-rose-600",
+              };
+              const count =
+                status === "ALL"
+                  ? Object.values(statusCounts).reduce(
+                      (sum, val) => sum + val,
+                      0
+                    )
+                  : statusCounts[status] || 0;
+
+              return (
+                <div
+                  key={status}
+                  className={`flex flex-col items-center justify-center py-4 rounded-lg shadow-sm ${colors[status]}`}
+                >
+                  <div className="text-xl font-bold">{count}</div>
+                  <div className="text-xs uppercase tracking-wide">
+                    {status}
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>
 
@@ -208,7 +209,7 @@ const TeacherApplication = () => {
                   value={type}
                   onChange={(e) => {
                     setType(e.target.value);
-                    fetchData(e.target.value);
+                    fetchData();
                   }}
                   className="appearance-none pl-3 pr-8 py-2 border border-gray-300 rounded-lg bg-gray-50 text-sm text-gray-700 focus:ring-2 focus:ring-blue-400"
                 >
@@ -262,7 +263,7 @@ const TeacherApplication = () => {
                   onChange={(e) => {
                     setPageSize(Number(e.target.value));
                     setPage(0);
-                    fetchData(undefined, 0);
+                    fetchData(undefined);
                   }}
                   className="px-2 py-1 border border-gray-300 rounded-md text-sm bg-gray-50"
                 >
@@ -315,18 +316,6 @@ const TeacherApplication = () => {
                   </button>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <input
-                    type="text"
-                    placeholder="ID"
-                    value={advancedFilters.id}
-                    onChange={(e) =>
-                      setAdvancedFilters((prev) => ({
-                        ...prev,
-                        id: e.target.value,
-                      }))
-                    }
-                    className="p-2 border border-gray-300 rounded-lg bg-gray-50 text-sm focus:ring-2 focus:ring-blue-400"
-                  />
                   <input
                     type="text"
                     placeholder="Username"
@@ -386,8 +375,8 @@ const TeacherApplication = () => {
                     className="p-2 border border-gray-300 rounded-lg bg-gray-50 text-sm focus:ring-2 focus:ring-blue-400"
                   >
                     <option value="">Gender</option>
-                    <option value="MALE">Male</option>
-                    <option value="FEMALE">Female</option>
+                    <option value="Female">Male</option>
+                    <option value="MALE">Female</option>
                   </select>
                   <input
                     type="text"
@@ -402,27 +391,20 @@ const TeacherApplication = () => {
                     className="p-2 border border-gray-300 rounded-lg bg-gray-50 text-sm focus:ring-2 focus:ring-blue-400"
                   />
                   <select
-                    value={advancedFilters.accountStatus}
-                    onChange={(e) =>
-                      setAdvancedFilters((prev) => ({
-                        ...prev,
-                        accountStatus: e.target.value,
-                      }))
+                    value={
+                      advancedFilters.hasAva === undefined
+                        ? ""
+                        : advancedFilters.hasAva
+                        ? "true"
+                        : "false"
                     }
-                    className="p-2 border border-gray-300 rounded-lg bg-gray-50 text-sm focus:ring-2 focus:ring-blue-400"
-                  >
-                    <option value="">Status</option>
-                    <option value="REQUIRE">Require</option>
-                    <option value="ACCEPT">Accept</option>
-                    <option value="REJECT">Reject</option>
-                    <option value="LOCKED">Locked</option>
-                  </select>
-                  <select
-                    value={advancedFilters.hasAvatar ?? ""}
                     onChange={(e) =>
                       setAdvancedFilters((prev) => ({
                         ...prev,
-                        hasAvatar: e.target.value,
+                        hasAva:
+                          e.target.value === ""
+                            ? undefined
+                            : e.target.value === "true",
                       }))
                     }
                     className="p-2 border border-gray-300 rounded-lg bg-gray-50 text-sm focus:ring-2 focus:ring-blue-400"
@@ -431,12 +413,22 @@ const TeacherApplication = () => {
                     <option value="true">Yes</option>
                     <option value="false">No</option>
                   </select>
+
                   <select
-                    value={advancedFilters.hasCv ?? ""}
+                    value={
+                      advancedFilters.hasCV === undefined
+                        ? ""
+                        : advancedFilters.hasCV
+                        ? "true"
+                        : "false"
+                    }
                     onChange={(e) =>
                       setAdvancedFilters((prev) => ({
                         ...prev,
-                        hasCv: e.target.value,
+                        hasCv:
+                          e.target.value === ""
+                            ? undefined
+                            : e.target.value === "true",
                       }))
                     }
                     className="p-2 border border-gray-300 rounded-lg bg-gray-50 text-sm focus:ring-2 focus:ring-blue-400"
@@ -471,7 +463,7 @@ const TeacherApplication = () => {
 
       {/* Table */}
       <div className="overflow-x-auto">
-        <table className="w-full bg-white shadow rounded-lg text-sm">
+        <table className="w-full bg-white shadow rounded-lg text-sm table-fixed">
           <thead className="bg-slate-100 text-slate-700 uppercase font-semibold tracking-wide border-b border-slate-300 shadow-sm">
             <tr>
               <th className="w-10 px-3 py-2 text-left">#</th>
@@ -486,11 +478,11 @@ const TeacherApplication = () => {
                 .map((col) => (
                   <th
                     key={col.key}
-                    className={`text-left px-3 py-2 ${
+                    className={`text-left px-3 py-2 truncate ${
                       col.key === "userName"
-                        ? "w-32"
+                        ? "w-36 max-w-[150px]"
                         : col.key === "email"
-                        ? "w-48"
+                        ? "w-48 max-w-[200px]"
                         : col.key === "phoneNumber"
                         ? "w-28"
                         : col.key === "birthday"
@@ -498,7 +490,7 @@ const TeacherApplication = () => {
                         : col.key === "gender"
                         ? "w-20"
                         : col.key === "description"
-                        ? "w-48"
+                        ? "w-48 max-w-[250px]"
                         : col.key === "cvFile"
                         ? "w-24"
                         : col.key === "status"
@@ -541,7 +533,7 @@ const TeacherApplication = () => {
                       visibleColumns.includes(col.key)
                   )
                   .map((col) => (
-                    <td key={col.key} className="px-3 py-3 max-w-xs truncate">
+                    <td key={col.key} className="px-3 py-3 truncate">
                       {col.key === "cvFile" ? (
                         app.cvFile ? (
                           <a
@@ -559,16 +551,15 @@ const TeacherApplication = () => {
                         ) : null
                       ) : col.key === "status" ? (
                         <span
-                          className={`inline-flex items-center px-2 py-0.5 text-xs font-semibold rounded-full
-                    ${
-                      app.accountStatus === "ACCEPT"
-                        ? "bg-emerald-100 text-emerald-600"
-                        : app.accountStatus === "REJECT"
-                        ? "bg-rose-100 text-rose-600"
-                        : app.accountStatus === "LOCKED"
-                        ? "bg-slate-100 text-slate-500"
-                        : "bg-amber-100 text-amber-600"
-                    }`}
+                          className={`inline-flex items-center px-2 py-0.5 text-xs font-semibold rounded-full ${
+                            app.accountStatus === "ACCEPT"
+                              ? "bg-emerald-100 text-emerald-600"
+                              : app.accountStatus === "REJECT"
+                              ? "bg-rose-100 text-rose-600"
+                              : app.accountStatus === "LOCKED"
+                              ? "bg-slate-100 text-slate-500"
+                              : "bg-amber-100 text-amber-600"
+                          }`}
                         >
                           {app.accountStatus}
                         </span>
@@ -584,12 +575,38 @@ const TeacherApplication = () => {
                         <span>
                           {new Date(app.birthday).toLocaleDateString("en-GB")}
                         </span>
-                      ) : col.key === "description" ? (
-                        <span title={app.description}>
-                          {app.description?.length > 60
-                            ? app.description.slice(0, 60) + "..."
-                            : app.description}
-                        </span>
+                      ) : ["userName", "email", "description"].includes(
+                          col.key
+                        ) ? (
+                        (() => {
+                          const raw = app[col.key as keyof typeof app];
+                          const value = typeof raw === "string" ? raw : "";
+                          const isLong = value.length > 40;
+
+                          return (
+                            <span
+                              className={`block max-w-[200px] whitespace-nowrap overflow-hidden text-ellipsis ${
+                                isLong
+                                  ? "cursor-pointer hover:underline hover:text-blue-600"
+                                  : ""
+                              }`}
+                              title={value}
+                              onClick={() => {
+                                if (isLong) {
+                                  setDetailModalContent({
+                                    title: col.label,
+                                    value,
+                                  });
+                                  setShowDetailModal(true);
+                                }
+                              }}
+                            >
+                              {isLong
+                                ? `${value.slice(0, 40)}...`
+                                : value || "-"}
+                            </span>
+                          );
+                        })()
                       ) : col.key === "action" ? (
                         <button className="bg-rose-500 hover:bg-rose-600 text-white font-medium px-2.5 py-1 text-xs rounded-full shadow">
                           Lock
@@ -604,6 +621,27 @@ const TeacherApplication = () => {
           </tbody>
         </table>
       </div>
+
+      {showDetailModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="bg-white p-6 rounded-lg shadow-xl max-w-lg w-full">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-lg font-semibold">
+                {detailModalContent.title}
+              </h2>
+              <button
+                onClick={() => setShowDetailModal(false)}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                ✕
+              </button>
+            </div>
+            <p className="text-sm text-gray-700 whitespace-pre-line break-words">
+              {detailModalContent.value}
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* Pagination */}
       <div className="flex justify-between items-center mt-6">
