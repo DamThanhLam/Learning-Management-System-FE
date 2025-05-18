@@ -496,7 +496,7 @@ const TeacherApplication = () => {
                         : col.key === "status"
                         ? "w-24"
                         : col.key === "action"
-                        ? "w-20"
+                        ? "w-32 min-w-[8rem]"
                         : ""
                     }`}
                   >
@@ -533,7 +533,7 @@ const TeacherApplication = () => {
                       visibleColumns.includes(col.key)
                   )
                   .map((col) => (
-                    <td key={col.key} className="px-3 py-3 truncate">
+                    <td key={col.key} className="px-3 py-3 whitespace-normal">
                       {col.key === "cvFile" ? (
                         app.cvFile ? (
                           <a
@@ -608,9 +608,22 @@ const TeacherApplication = () => {
                           );
                         })()
                       ) : col.key === "action" ? (
-                        <button className="bg-rose-500 hover:bg-rose-600 text-white font-medium px-2.5 py-1 text-xs rounded-full shadow">
-                          Lock
-                        </button>
+                        <div className="flex gap-2">
+                          {/* Lock button */}
+                          <button className="bg-rose-500 hover:bg-rose-600 text-white font-medium px-2.5 py-1 text-xs rounded-full shadow">
+                            Lock
+                          </button>
+
+                          {/* Chỉ hiển thị nút Review nếu accountStatus = REQUIRE */}
+                          {app.accountStatus === "REQUIRE" && (
+                            <button
+                              onClick={() => setSelectedApp(app)}
+                              className="bg-blue-500 hover:bg-blue-600 text-white font-medium px-2.5 py-1 text-xs rounded-full shadow"
+                            >
+                              Review
+                            </button>
+                          )}
+                        </div>
                       ) : (
                         <span>{app[col.key] || "-"}</span>
                       )}
@@ -621,6 +634,14 @@ const TeacherApplication = () => {
           </tbody>
         </table>
       </div>
+
+      {selectedApp && (
+        <TeacherReviewModal
+          selectedApp={selectedApp}
+          setSelectedApp={setSelectedApp}
+          refreshData={() => fetchData(advancedFilters)} // 👈 gọi lại dữ liệu sau khi duyệt
+        />
+      )}
 
       {showDetailModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
