@@ -151,7 +151,10 @@ export default function ProfilePage() {
       formData.append('userName', `${profileInfo.firstName} ${profileInfo.lastName}`.trim())
       formData.append('description', profileInfo.description || '')
       formData.append('birthday', profileInfo.birthday || '')
-      formData.append('phoneNumber', profileInfo.phoneNumber || '')
+      // Only append phoneNumber if not empty
+      if (profileInfo.phoneNumber && profileInfo.phoneNumber.trim() !== '') {
+        formData.append('phoneNumber', profileInfo.phoneNumber)
+      }
       formData.append('gender', profileInfo.gender || '')
       formData.append('email', profileInfo.email || '')
 
