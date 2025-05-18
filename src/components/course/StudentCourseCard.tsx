@@ -1,72 +1,54 @@
-import Image from "next/image";
-import { Star } from "lucide-react";
+import Image from 'next/image'
+import { Star } from 'lucide-react'
 
 interface StudentCourseCardProps {
-  courseName: string;
-  category: string;
-  price: number;
-  startTime: string;
-  lectures: number;
-  rating: number;
-  urlAvt: string;
+  courseName: string
+  category: string
+  price: number
+  totalReview: number
+  countReviews: number
+  urlAvt: string
+  teacherName: string
 }
 
-const StudentCourseCard: React.FC<StudentCourseCardProps> = ({
-  courseName,
-  category,
-  price,
-  startTime,
-  lectures,
-  rating,
-  urlAvt,
-}) => {
+const StudentCourseCard: React.FC<StudentCourseCardProps> = ({ courseName, category, price, totalReview = 0, countReviews, urlAvt, teacherName }) => {
   return (
-    <div className="bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-200 w-auto h-auto">
+    <div className="bg-white rounded-lg shadow-md overflow-hidden border border-gray-200 hover:shadow-lg transition-shadow duration-300">
       {/* Course Image */}
       <div className="w-full h-40 relative">
-        <Image
-          src={urlAvt} // Use urlAvt for the image source
-          alt={courseName}
-          layout="fill"
-          objectFit="cover"
-          className="rounded-t-2xl"
-        />
+        <Image src={urlAvt} alt={courseName} layout="fill" objectFit="cover" className="rounded-t-lg" />
       </div>
 
       {/* Course Details */}
-      <div className="p-4">
+      <div className="p-4 flex flex-col gap-2">
         {/* Course Name */}
-        <h3 className="text-lg font-bold mb-1">{courseName}</h3>
+        <h3 className="text-lg font-semibold text-gray-800 line-clamp-2">{courseName}</h3>
+
+        {/* Teacher Name */}
+        <p className="text-sm text-gray-500">
+          <strong>By:</strong> {teacherName}
+        </p>
+
         {/* Category */}
-        <p className="text-sm text-gray-500 mb-2">
+        <p className="text-sm text-blue-700">
           <strong>Category:</strong> {category}
         </p>
-        {/* Start Time */}
-        <p className="text-sm text-gray-500 mb-2">
-          <strong>Start Time:</strong> {new Date(startTime).toLocaleDateString()}
-        </p>
-        {/* Number of Lectures */}
-        <p className="text-sm text-gray-500 mb-2">
-          <strong>Lectures:</strong> {lectures}
-        </p>
+
         {/* Ratings */}
-        <div className="flex items-center mb-2">
+        <div className="flex items-center">
           {[...Array(5)].map((_, i) => (
-            <Star
-              key={i}
-              size={16}
-              className={i < rating ? "text-yellow-500" : "text-gray-300"}
-            />
+            <Star key={i} size={16} className={i < Math.round(totalReview) ? 'text-yellow-500' : 'text-gray-300'} />
           ))}
-          <span className="text-gray-600 text-sm ml-2">({rating} Stars)</span>
+          <span className="text-yellow-600 text-sm ml-2">
+            {totalReview.toFixed(1)} ({countReviews} Reviews)
+          </span>
         </div>
+
         {/* Price */}
-        <p className="text-xl font-bold mt-2">
-          {price === 0 ? "Free" : `$${price.toFixed(2)}`}
-        </p>
+        <p className="text-lg font-bold text-green-600 mt-2">{price === 0 ? 'Free' : `$${price.toFixed(2)}`}</p>
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default StudentCourseCard;
+export default StudentCourseCard
