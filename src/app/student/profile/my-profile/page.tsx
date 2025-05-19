@@ -34,15 +34,6 @@ export default function ProfilePage() {
   const [imageLabel, setImageLabel] = useState<string>('')
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  // State for Container 3: Links
-  const [links, setLinks] = useState({
-    website: '',
-    x: '',
-    linkedin: '',
-    youtube: '',
-    facebook: ''
-  })
-
   // API related states
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -93,18 +84,6 @@ export default function ProfilePage() {
 
         if (userData.urlImage) {
           setAvatarPreview(userData.urlImage)
-        }
-
-        if (userData.contacts) {
-          try {
-            const contactsData = typeof userData.contacts === 'string' ? JSON.parse(userData.contacts) : userData.contacts
-            setLinks((prev) => ({
-              ...prev,
-              ...contactsData
-            }))
-          } catch (e) {
-            console.error('Error parsing contacts:', e)
-          }
         }
       } else {
         setError('Failed to fetch profile data')
@@ -163,11 +142,6 @@ export default function ProfilePage() {
         formData.append('imageAvt', avatarFile)
       }
 
-      // Append each contact field individually
-      Object.entries(links).forEach(([key, value]) => {
-        formData.append(`contacts[${key}]`, value || '')
-      })
-
       const response = await axios.put(`${BASE_URL_USER_SERVICE}`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data'
@@ -187,11 +161,6 @@ export default function ProfilePage() {
     } finally {
       setLoading(false)
     }
-  }
-
-  const handleLinksChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target
-    setLinks((prev) => ({ ...prev, [name]: value }))
   }
 
   if (loading) {
@@ -324,91 +293,6 @@ export default function ProfilePage() {
               <input type="file" ref={fileInputRef} onChange={handleAvatarChange} accept="image/*" className="hidden" />
               <p className="text-sm text-gray-500 mt-2">Recommended: JPG, PNG. Max 5MB</p>
             </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="mb-8 bg-white shadow rounded-lg w-full">
-        <h2 className="text-xl font-bold px-8 pt-6 mb-4">Links</h2>
-        <div className="px-8 pb-8 space-y-4 max-w-full">
-          {/* Website */}
-          <div>
-            <label htmlFor="website" className="block text-sm font-bold text-gray-700">
-              Website
-            </label>
-            <input
-              type="url"
-              id="website"
-              name="website"
-              value={links.website}
-              onChange={handleLinksChange}
-              className="mt-1 block w-full border rounded p-2"
-              placeholder="https://yourwebsite.com"
-            />
-          </div>
-
-          {/* X */}
-          <div>
-            <label htmlFor="x" className="block text-sm font-bold text-gray-700">
-              X
-            </label>
-            <input
-              type="url"
-              id="x"
-              name="x"
-              value={links.x}
-              onChange={handleLinksChange}
-              className="mt-1 block w-full border rounded p-2"
-              placeholder="https://x.com/yourprofile"
-            />
-          </div>
-
-          {/* LinkedIn */}
-          <div>
-            <label htmlFor="linkedin" className="block text-sm font-bold text-gray-700">
-              LinkedIn
-            </label>
-            <input
-              type="url"
-              id="linkedin"
-              name="linkedin"
-              value={links.linkedin}
-              onChange={handleLinksChange}
-              className="mt-1 block w-full border rounded p-2"
-              placeholder="https://linkedin.com/in/yourprofile"
-            />
-          </div>
-
-          {/* YouTube */}
-          <div>
-            <label htmlFor="youtube" className="block text-sm font-bold text-gray-700">
-              YouTube
-            </label>
-            <input
-              type="url"
-              id="youtube"
-              name="youtube"
-              value={links.youtube}
-              onChange={handleLinksChange}
-              className="mt-1 block w-full border rounded p-2"
-              placeholder="https://youtube.com/yourchannel"
-            />
-          </div>
-
-          {/* Facebook */}
-          <div>
-            <label htmlFor="facebook" className="block text-sm font-bold text-gray-700">
-              Facebook
-            </label>
-            <input
-              type="url"
-              id="facebook"
-              name="facebook"
-              value={links.facebook}
-              onChange={handleLinksChange}
-              className="mt-1 block w-full border rounded p-2"
-              placeholder="https://facebook.com/yourprofile"
-            />
           </div>
         </div>
       </div>
