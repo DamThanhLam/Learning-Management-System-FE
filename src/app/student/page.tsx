@@ -16,9 +16,11 @@ export default function HomePage() {
     { value: '2400+', description: 'Hours of content' }
   ]
 
-  const [categories, setCategories] = useState([]) // State for categories
+  const [categories, setCategories] = useState<string[]>([]) // State for categories
   const [loading, setLoading] = useState(true) // Loading state
-  const [error, setError] = useState(null) // Error state
+  const [error, setError] = useState<string | null>(null) // Error state
+  const [currentPage, setCurrentPage] = useState(0) // Current page for pagination
+  const categoriesPerPage = 8 // 4 columns x 2 rows = 8 categories per page
 
   const [courses, setCourses] = useState([]) // State for courses
   const [loadingCourses, setLoadingCourses] = useState(true) // Loading state for courses
@@ -28,17 +30,13 @@ export default function HomePage() {
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const response = await fetch(
-          `${BASE_URL_COURSE_SERVICE}/get-all-categories`,
-          {
-            method: 'GET',
-            credentials: 'include' // Include cookies for authentication
-          }
-        )
+        const response = await fetch(`${BASE_URL_COURSE_SERVICE}/get-all-categories`, {
+          method: 'GET',
+          credentials: 'include' // Include cookies for authentication
+        })
         const data = await response.json()
         if (response.ok && data.code === 200) {
-          // console.log(data.data)
-          setCategories(data.data) // Set categories from API response
+          setCategories(data.data || []) // Set categories from API response
         } else {
           throw new Error(data.message || 'Failed to fetch categories')
         }
@@ -120,32 +118,27 @@ export default function HomePage() {
     },
     {
       userName: 'John Smith',
-      content:
-        'The courses are well-structured and easy to follow. I was able to learn new skills and apply them to my job immediately.',
+      content: 'The courses are well-structured and easy to follow. I was able to learn new skills and apply them to my job immediately.',
       avaUrl: 'https://picsum.photos/81/81'
     },
     {
       userName: 'Alice Johnson',
-      content:
-        'I love the variety of courses available. The instructors are knowledgeable and the content is very practical.',
+      content: 'I love the variety of courses available. The instructors are knowledgeable and the content is very practical.',
       avaUrl: 'https://picsum.photos/82/82'
     },
     {
       userName: 'Michael Brown',
-      content:
-        'The platform is user-friendly and the courses are very informative. Highly recommended!',
+      content: 'The platform is user-friendly and the courses are very informative. Highly recommended!',
       avaUrl: 'https://picsum.photos/83/83'
     },
     {
       userName: 'Emily Davis',
-      content:
-        'I was able to learn at my own pace and the support from the instructors was amazing.',
+      content: 'I was able to learn at my own pace and the support from the instructors was amazing.',
       avaUrl: 'https://picsum.photos/84/84'
     },
     {
       userName: 'Chris Wilson',
-      content:
-        'The courses helped me improve my skills and land better projects. Thank you, Byway!',
+      content: 'The courses helped me improve my skills and land better projects. Thank you, Byway!',
       avaUrl: 'https://picsum.photos/85/85'
     }
   ]
@@ -156,9 +149,23 @@ export default function HomePage() {
   }
 
   const handlePrev = () => {
-    setCurrentIndex(
-      (prevIndex) => (prevIndex - 3 + reviews.length) % reviews.length
-    )
+    setCurrentIndex((prevIndex) => (prevIndex - 3 + reviews.length) % reviews.length)
+  }
+
+  // Pagination logic
+  const totalPages = Math.ceil(categories.length / 8)
+  const paginatedCategories = categories.slice(currentPage * 8, (currentPage + 1) * 8)
+
+  const handleNextPage = () => {
+    if (currentPage < totalPages - 1) {
+      setCurrentPage((prev) => prev + 1)
+    }
+  }
+
+  const handlePrevPage = () => {
+    if (currentPage > 0) {
+      setCurrentPage((prev) => prev - 1)
+    }
   }
 
   return (
@@ -166,28 +173,22 @@ export default function HomePage() {
       {/* Hero Section */}
       <section className="text-center py-16 px-4 bg-gray-50 flex flex-col md:flex-row items-center gap-6">
         <div className="md:w-1/2">
-          <h1 className="text-4xl font-bold text-gray-800 mb-4">
-            Unlock Your Potential with LMS
-          </h1>
+          <h1 className="text-4xl font-bold text-gray-800 mb-4">Unlock Your Potential with LMS</h1>
           <p className="text-lg text-gray-600 mb-6 p-4">
-            Welcome to LMS, where learning knows no bounds. We believe that
-            education is the key to personal and professional growth, and we're
-            here to guide you on your journey to success.
+            Welcome to LMS, where learning knows no bounds. We believe that education is the key to personal and professional growth, and we're here to guide
+            you on your journey to success.
           </p>
-          <button className="px-6 py-3 bg-blue-600 text-white rounded-full hover:bg-blue-700"
+          <button
+            className="px-6 py-3 bg-blue-600 text-white rounded-full hover:bg-blue-700"
             onClick={() => {
-              router.push("/register/teacher")
+              router.push('/register/teacher')
             }}>
             Start your teacher journey
           </button>
         </div>
         <div className="md:w-1/2 relative max-w-md mx-auto">
           <div className="absolute top-0 left-0 w-16 h-16 bg-blue-100 rounded-full -translate-x-4 -translate-y-4"></div>
-          <img
-            src="https://picsum.photos/400/400"
-            alt="Community of learners"
-            className="w-full h-auto rounded-lg object-cover z-0 relative"
-          />
+          <img src="/images/logo.jpg" alt="Community of learners" className="w-full h-auto rounded-lg object-cover z-0 relative" />
           <div className="absolute bottom-0 right-0 w-16 h-16 bg-yellow-100 rounded-full translate-x-4 translate-y-4"></div>
         </div>
       </section>
@@ -208,10 +209,21 @@ export default function HomePage() {
       <section className="py-12 bg-gray-50">
         <div className="max-w-6xl mx-auto">
           <div className="flex justify-between items-center mb-6">
-            <h2 className="text-2xl font-bold text-gray-800">Top Categories</h2>
-            <a href="/student/category" className="text-blue-600 hover:underline">
-              See All
-            </a>
+            <h2 className="text-2xl font-bold text-gray-800">All Categories</h2>
+            <div className="flex space-x-2">
+              <button
+                onClick={handlePrevPage}
+                disabled={currentPage === 0}
+                className={`px-4 py-2 bg-gray-200 rounded ${currentPage === 0 ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-300'}`}>
+                Previous
+              </button>
+              <button
+                onClick={handleNextPage}
+                disabled={currentPage === totalPages - 1}
+                className={`px-4 py-2 bg-gray-200 rounded ${currentPage === totalPages - 1 ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-300'}`}>
+                Next
+              </button>
+            </div>
           </div>
           {loading ? (
             <div className="flex justify-center items-center p-8">
@@ -220,16 +232,10 @@ export default function HomePage() {
           ) : error ? (
             <p className="text-center text-red-500">{error}</p>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-              {categories.map((category, index) => (
-                <Link
-                  key={index}
-                  href={'/student/category?category=' + category}>
-                  <TopCategoryCard
-                    name={category}
-                    courses={0}
-                    icon={<span>📚</span>}
-                  />
+            <div className="grid grid-cols-4 gap-6">
+              {paginatedCategories.map((category, index) => (
+                <Link key={index} href={'/student/category?category=' + category}>
+                  <TopCategoryCard name={category} courses={0} icon={<span>📚</span>} />
                 </Link>
               ))}
             </div>
@@ -242,7 +248,7 @@ export default function HomePage() {
         <div className="max-w-6xl mx-auto">
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-2xl font-bold text-gray-800">Top Courses</h2>
-            <a href="/student/category" className="text-blue-600 hover:underline">
+            <a href="/student/courses" className="text-blue-600 hover:underline">
               See All
             </a>
           </div>
@@ -333,25 +339,18 @@ export default function HomePage() {
       {/* Become an Instructor Section */}
       <section className="py-12 bg-gray-50">
         <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center">
-          <img
-            src="https://picsum.photos/400/400"
-            alt="Instructor"
-            className="w-64 h-64 rounded-lg object-cover mb-6 md:mb-0 md:mr-6"
-          />
+          <img src="/images/instructor.jpg" alt="Instructor" className="w-64 h-64 rounded-lg object-cover mb-6 md:mb-0 md:mr-6" />
           <div className="text-center md:text-left">
-            <h3 className="text-3xl font-bold text-gray-800">
-              Become an Instructor
-            </h3>
+            <h3 className="text-3xl font-bold text-gray-800">Become a Teacher</h3>
             <p className="text-gray-600 mt-4">
-              Instructors from around the world teach millions of students on
-              Byway. We provide the tools and skills to teach what you love.
+              Instructors from around the world teach millions of students on Byway. We provide the tools and skills to teach what you love.
             </p>
-            <button className="mt-6 px-6 py-3 bg-blue-600 text-white rounded-full hover:bg-blue-700"
+            <button
+              className="mt-6 px-6 py-3 bg-blue-600 text-white rounded-full hover:bg-blue-700"
               onClick={() => {
-                router.push("/register/teacher")
-              }}
-            >
-              Start Your Instructor Journey
+                router.push('/register/teacher')
+              }}>
+              Start Your Teacher Journey
             </button>
           </div>
         </div>
@@ -361,26 +360,17 @@ export default function HomePage() {
       <section className="py-12 bg-white">
         <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center gap-6">
           <div className="text-center md:text-left">
-            <h3 className="text-3xl font-bold text-gray-800">
-              Transform your life through education
-            </h3>
-            <p className="text-gray-600 mt-4">
-              Learners around the world are launching new careers, advancing in
-              their fields, and enriching their lives.
-            </p>
-            <button className="mt-6 px-6 py-3 bg-blue-600 text-white rounded-full hover:bg-blue-700"
+            <h3 className="text-3xl font-bold text-gray-800">Transform your life through education</h3>
+            <p className="text-gray-600 mt-4">Learners around the world are launching new careers, advancing in their fields, and enriching their lives.</p>
+            <button
+              className="mt-6 px-6 py-3 bg-blue-600 text-white rounded-full hover:bg-blue-700"
               onClick={() => {
-                router.push("/student/category")
-              }}
-            >
-              Checkout Courses
+                router.push('/student/courses')
+              }}>
+              Checkout Our Courses
             </button>
           </div>
-          <img
-            src="https://picsum.photos/400/400"
-            alt="Education"
-            className="w-64 h-64 rounded-lg object-cover mb-6 md:mb-0 md:mr-6"
-          />
+          <img src="/images/course-checkout.jpg" alt="Education" className="w-64 h-64 rounded-lg object-cover mb-6 md:mb-0 md:mr-6" />
         </div>
       </section>
     </main>

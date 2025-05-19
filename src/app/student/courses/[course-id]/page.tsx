@@ -42,6 +42,7 @@ export default function CourseDetailsPage({ params }: { params: Promise<{ 'cours
   const [activeTab, setActiveTab] = useState<'teacher' | 'reviews'>('teacher') // Tab state
   const [reviews, setReviews] = useState<any[]>([]) // Reviews fetched from the API
   const [isPurchased, setIsPurchased] = useState<boolean>(false) // Tracks if the course is purchased
+  const [showModal, setShowModal] = useState(false)
 
   useEffect(() => {
     const resolveParams = async () => {
@@ -228,26 +229,26 @@ export default function CourseDetailsPage({ params }: { params: Promise<{ 'cours
   }
 
   const handleAddToCart = async (courseId: string) => {
-    console.log(courseId)
     try {
       const response = await fetch(`${BASE_URL_COURSE_SERVICE}/shopping-cart`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
-        credentials: 'include', // Include cookies for authentication
-        body: JSON.stringify({ courseId }) // Send courseId in the request body
+        credentials: 'include',
+        body: JSON.stringify({ courseId })
       })
 
-      if (!response.ok) {
-        const errorData = await response.json() // Parse the error response
-        throw new Error(errorData.message || 'Failed to add course to cart.') // Use the error message from the API
-      }
+      const data = await response.json()
 
-      toast.success('Course added to cart successfully!') // Optional: Show success message
+      if (response.ok && data.status === 'success') {
+        setShowModal(true) // Show the modal
+      } else {
+        throw new Error(data.message || 'Failed to add course to cart.')
+      }
     } catch (error: any) {
       console.error('Error adding to cart:', error)
-      toast.error(error.message || 'An error occurred.') // Optional: Show error message
+      alert(error.message || 'An error occurred.')
     }
   }
 
@@ -285,10 +286,13 @@ export default function CourseDetailsPage({ params }: { params: Promise<{ 'cours
             <BuyCourseCard
               urlAvt={course.urlAvt || 'https://via.placeholder.com/150'}
               price={course.price || 0}
-              purchased={isPurchased} // Pass the purchased status
-              onAddToCart={() => handleAddToCart(courseId!)} // Ensure courseId is not null
-              onBuyNow={() => console.log('Buy Now clicked')}
-              onLearnNow={() => (window.location.href = `/student/courses/${courseId}/learn`)} // Redirect to the learning page
+              purchased={isPurchased}
+              onAddToCart={() => handleAddToCart(courseId!)}
+              onBuyNow={() => {
+                // Navigate to the checkout page with the courseId as a query param
+                window.location.href = `/student/shopping-cart/checkout?courseIds=${courseId}`
+              }}
+              onLearnNow={() => (window.location.href = `/student/courses/${courseId}/learning`)}
             />
           </div>
         </div>
@@ -310,6 +314,28 @@ export default function CourseDetailsPage({ params }: { params: Promise<{ 'cours
         </div>
         <div className="mt-5">{renderTabContent()}</div>
       </div>
+
+      {showModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+          <div className="bg-white rounded-lg shadow-lg p-8 max-w-sm w-full text-center">
+            <h2 className="text-xl font-bold mb-4">Course added to cart!</h2>
+            <p className="mb-6">The course has been added to your shopping cart.</p>
+            <div className="flex justify-center gap-4">
+              <button
+                className="bg-blue-500 text-white px-4 py-2 rounded"
+                onClick={() => {
+                  setShowModal(false)
+                  window.location.href = '/student/shopping-cart'
+                }}>
+                Go to Cart
+              </button>
+              <button className="bg-gray-300 text-gray-700 px-4 py-2 rounded" onClick={() => setShowModal(false)}>
+                Dismiss
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
