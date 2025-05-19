@@ -5,103 +5,117 @@ import { CheckCircleIcon } from '@heroicons/react/24/solid';
 import { BASE_URL_USER_SERVICE } from '@/utils/BaseURL';
 
 const OTP_LENGTH = 6;
-const RESEND_TIMEOUT = 60; // 60s
+const RESEND_TIMEOUT = 60; // seconds
 
 const VerifyOtp: React.FC = () => {
-  const [email, setEmail] = useState<string>('');
-  const [otp, setOtp] = useState<string[]>(Array(OTP_LENGTH).fill(''));
-  const [message, setMessage] = useState<string>('');
-  const [loadingSend, setLoadingSend] = useState<boolean>(false);
-  const [loadingVerify, setLoadingVerify] = useState<boolean>(false);
-  const [resendCounter, setResendCounter] = useState<number>(0);
+  const [email, setEmail] = useState('');
+  const [otp, setOtp] = useState(Array(OTP_LENGTH).fill(''));
+  const [message, setMessage] = useState('');
+  const [loadingSend, setLoadingSend] = useState(false);
+  const [loadingVerify, setLoadingVerify] = useState(false);
+  const [resendCounter, setResendCounter] = useState(0);
 
-  const inputsRef = useRef<Array<HTMLInputElement | null>>([]);
+  const inputsRef = useRef([]);
 
-  // Lấy email từ localStorage và tự động gửi OTP
+  // Load email + send OTP on mount
   useEffect(() => {
-    const storedEmail = window.localStorage.getItem('email');
-    if (storedEmail) {
-      setEmail(storedEmail);
-      triggerSendOtp(storedEmail);
+    const stored = localStorage.getItem('email');
+    if (stored) {
+      setEmail(stored);
+      triggerSendOtp(stored);
     }
   }, []);
 
-  // Countdown resend
+  // Countdown
   useEffect(() => {
-    let timer: NodeJS.Timeout;
-    if (resendCounter > 0) {
-      timer = setTimeout(() => setResendCounter(resendCounter - 1), 1000);
-    }
+    if (resendCounter <= 0) return;
+    const timer = setTimeout(() => setResendCounter(resendCounter - 1), 1000);
     return () => clearTimeout(timer);
   }, [resendCounter]);
 
-  // Gửi OTP
-  const triggerSendOtp = async (emailToSend: string) => {
-    if (!emailToSend) return;
+  // Send OTP
+  const triggerSendOtp = async (mail) => {
+    if (!mail) return;
     try {
       setLoadingSend(true);
       setMessage('');
       const res = await axios.get(`${BASE_URL_USER_SERVICE}/send-otp`, {
-        params: { email: emailToSend },
+        params: { email: mail },
         withCredentials: true,
       });
       if (res.data.code === 200) {
-        setMessage(`✅ OTP đã được gửi đến ${emailToSend}`);
-        setResendCounter(RESEND_TIMEOUT); // reset countdown
-        setOtp(Array(OTP_LENGTH).fill('')); // clear old OTP
+        setMessage(`✅ OTP sent to ${mail}`);
+        setResendCounter(RESEND_TIMEOUT);
+        setOtp(Array(OTP_LENGTH).fill(''));
         inputsRef.current[0]?.focus();
       } else {
-        setMessage('❌ Gửi OTP thất bại. Vui lòng thử lại.');
+        setMessage('❌ Failed to send OTP.');
       }
     } catch {
-      setMessage('❌ Lỗi khi gửi OTP. Vui lòng thử lại sau.');
+      setMessage('❌ Error sending OTP.');
     } finally {
       setLoadingSend(false);
     }
   };
 
-  const isComplete = otp.every((d) => d !== '');
+  // Check if OTP complete
+  const isComplete = otp.every(d => d !== '');
 
-  // Xử lý nhập
-  const handleOtpChange = (e: React.ChangeEvent<HTMLInputElement>, idx: number) => {
-    const val = e.target.value.replace(/\D/, '');
-    if (!val) return;
-    const newOtp = [...otp];
-    newOtp[idx] = val.charAt(val.length - 1);
-    setOtp(newOtp);
-    if (idx < OTP_LENGTH - 1) inputsRef.current[idx + 1]?.focus();
-  };
-
-  // Xử lý Backspace
-  const handleOtpKeyDown = (e: React.KeyboardEvent<HTMLInputElement>, idx: number) => {
-    if (e.key === 'Backspace' && !otp[idx] && idx > 0) {
-      inputsRef.current[idx - 1]?.focus();
+  // Handle change, allow delete
+  const handleOtpChange = (e, idx) => {
+    const val = e.target.value;
+    // only empty or single digit
+    if (val === '' || /^\d$/.test(val)) {
+      const newOtp = [...otp];
+      newOtp[idx] = val;
+      setOtp(newOtp);
+      if (val && idx < OTP_LENGTH - 1) {
+        inputsRef.current[idx + 1]?.focus();
+      }
     }
   };
 
-  // Xác thực OTP
+  // Handle key down for backspace
+  const handleOtpKeyDown = (e, idx) => {
+    if (e.key === 'Backspace') {
+      e.preventDefault();
+      const newOtp = [...otp];
+      if (otp[idx]) {
+        // clear current
+        newOtp[idx] = '';
+        setOtp(newOtp);
+      } else if (idx > 0) {
+        // move focus back and clear previous
+        inputsRef.current[idx - 1]?.focus();
+        newOtp[idx - 1] = '';
+        setOtp(newOtp);
+      }
+    }
+  };
+
+  // Verify OTP
   const handleVerify = async () => {
     const code = otp.join('');
     if (code.length < OTP_LENGTH) {
-      setMessage('⚠️ Vui lòng nhập đầy đủ mã OTP.');
+      setMessage('⚠️ Please enter full OTP');
       return;
     }
     try {
       setLoadingVerify(true);
       setMessage('');
-      const response = await axios.post(
+      const res = await axios.post(
         `${BASE_URL_USER_SERVICE}/verify-otp`,
         { email, code },
         { withCredentials: true }
       );
-      if (response.data.valid) {
-        setMessage('✅ Xác thực OTP thành công!');
-        window.location.href="/"
+      if (res.data.valid) {
+        setMessage('✅ Verified successfully!');
+        window.location.href = '/';
       } else {
-        setMessage('❌ Mã OTP không hợp lệ. Vui lòng thử lại.');
+        setMessage('❌ Invalid OTP.');
       }
     } catch {
-      setMessage('❌ Xác thực thất bại. Vui lòng thử lại sau.');
+      setMessage('❌ Verification failed.');
     } finally {
       setLoadingVerify(false);
     }
@@ -114,28 +128,25 @@ const VerifyOtp: React.FC = () => {
           Verification Code
         </h2>
         <p className="text-sm text-gray-600 mb-6 text-center">
-          Please enter the code sent to{' '}
-          <span className="font-medium text-gray-800">{email}</span>
+          Enter code sent to <span className="font-medium text-gray-800">{email}</span>
         </p>
 
-        {/* OTP Inputs */}
-        <div className="relative flex justify-between mb-4 space-x-2">
+        <div className="flex justify-between mb-4 space-x-2">
           {otp.map((digit, idx) => (
             <input
               key={idx}
               type="text"
               maxLength={1}
-              value={digit || ''}
-              onChange={(e) => handleOtpChange(e, idx)}
-              onKeyDown={(e) => handleOtpKeyDown(e, idx)}
-              ref={(el) => (inputsRef.current[idx] = el)}
+              value={digit}
+              onChange={e => handleOtpChange(e, idx)}
+              onKeyDown={e => handleOtpKeyDown(e, idx)}
+              ref={el => (inputsRef.current[idx] = el)}
               className={`w-12 h-12 text-center border rounded-lg text-xl focus:outline-none focus:ring-2 
-                ${isComplete 
-                  ? 'border-green-400 focus:ring-green-500' 
+                ${isComplete
+                  ? 'border-green-400 focus:ring-green-500'
                   : 'border-gray-300 focus:ring-green-500'}`}
             />
           ))}
-        
         </div>
 
         {message && (
@@ -144,7 +155,6 @@ const VerifyOtp: React.FC = () => {
           </p>
         )}
 
-        {/* Confirm Button */}
         <button
           onClick={handleVerify}
           disabled={loadingVerify}
@@ -156,7 +166,6 @@ const VerifyOtp: React.FC = () => {
           {loadingVerify ? 'Verifying...' : 'Confirm Code'}
         </button>
 
-        {/* Resend */}
         <div className="mt-4 text-center">
           <button
             onClick={() => triggerSendOtp(email)}

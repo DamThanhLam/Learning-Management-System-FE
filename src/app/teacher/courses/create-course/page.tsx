@@ -129,8 +129,8 @@ const CourseDetails: React.FC = () => {
     formData.append("courseName", courseName);
     formData.append("price", coursePrice);
     formData.append("category", category);
-    formData.append("status", status);
-    formData.append("level", level);
+    formData.append("status", status.toLocaleUpperCase());
+    formData.append("level", level.toLocaleUpperCase());
     formData.append("description", description);
     if (introImageFile) formData.append("fileAvt", introImageFile);
     if (introVideoFile) formData.append("videoIntro", introVideoFile);
@@ -306,7 +306,7 @@ const CourseDetails: React.FC = () => {
             {/* Price */}
             <div className="mb-4">
               <label className="block text-sm font-medium mb-1">
-                Course Price
+                Course Price(USD)
               </label>
               <input
                 type="text"

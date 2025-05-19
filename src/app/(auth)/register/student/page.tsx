@@ -51,9 +51,14 @@ const StudentRegistration = () => {
       });
 
       if (response.ok) {
-        setRegistered(true);
-        window.localStorage.setItem("email", email)
-        router.push("/verify-otp");
+        const data = await response.json();
+        if (data.code == 200) {
+          window.localStorage.setItem("email", email)
+          router.push("/verify-otp");
+        } else {
+          alert(data.errors || "Đăng ký thất bại!");
+        }
+
       } else {
         alert("Đăng ký thất bại!");
       }

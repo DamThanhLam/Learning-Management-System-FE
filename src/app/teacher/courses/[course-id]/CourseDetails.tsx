@@ -294,7 +294,7 @@ const CourseDetails: React.FC = () => {
             {/* Price */}
             <div className="mb-4">
               <label className="block text-sm font-medium mb-1">
-                Course Price
+                Course Price(USD)
               </label>
               <input
                 type="text"

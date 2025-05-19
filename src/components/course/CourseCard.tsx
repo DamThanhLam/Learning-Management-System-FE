@@ -29,7 +29,7 @@ const CourseCard: React.FC<CourseCardProps> = ({
       <h3 className="text-lg font-bold mt-2">{title}</h3>
       <div className="grid grid-cols-3 gap-4 mt-4 text-center">
         <div>
-          <p className="text-2xl font-semibold">{functional.formatVND(price)}</p>
+          <p className="text-2xl font-semibold">{functional.formatUSD(price)}</p>
           <p className="text-gray-500">PRICE</p>
         </div>
         <div>

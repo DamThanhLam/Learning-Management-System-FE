@@ -7,15 +7,18 @@ export async function middleware(req: NextRequest) {
   const currentPath = req.nextUrl.pathname;
   const refeshToken = req.cookies.get("refresh_token")?.value;
   const pathParts = currentPath.split("/").filter(part => part !== "");
-  const publicPaths = ["/login","/login/notification-send-link", "/register","/register/student","/register/teacher","/forgot-password"];
+  const publicPaths = ["/login", "/login/notification-send-link", "/register", "/register/student", "/register/teacher", "/forgot-password"];
+  const nonAuth = ["/verify-otp"]
   if (!refeshToken && !token && publicPaths.includes(currentPath)) {
     return NextResponse.next()
   }
-
+  if (nonAuth.includes(currentPath)) {
+    return NextResponse.next()
+  }
 
   try {
     // Gửi request đến Backend để kiểm tra tính hợp lệ của JWT
-    const backendUrl = BASE_URL_USER_SERVICE+"/verify-token";
+    const backendUrl = BASE_URL_USER_SERVICE + "/verify-token";
     const response = token && await fetch(backendUrl, {
       method: "POST",
       credentials: 'include',
@@ -40,7 +43,7 @@ export async function middleware(req: NextRequest) {
         return response;
       }
 
-      const refreshResponse = await fetch(BASE_URL_USER_SERVICE+"/refresh", {
+      const refreshResponse = await fetch(BASE_URL_USER_SERVICE + "/refresh", {
         method: "GET",
         credentials: 'include',
         headers: {
@@ -126,9 +129,8 @@ export const config = {
      * Bỏ qua các file tĩnh và API docs.
      * Middleware chỉ áp dụng cho route người dùng truy cập.
      */
-    "/((?!api|_next/static|_next/image|favicon.ico|.*\\.(?:css|js|png|jpg|jpeg|svg|woff2|ttf|eot|json)).*)","/register/:path*"
+    "/((?!api|_next/static|_next/image|favicon.ico|.*\\.(?:css|js|png|jpg|jpeg|svg|woff2|ttf|eot|json)).*)", "/register/:path*"
   ],
 };
 
 
-  
