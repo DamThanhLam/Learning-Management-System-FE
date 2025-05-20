@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react'
 import TeacherCard from '@/components/teacher/TeacherCard'
 // import StudentCourseCard from '@/components/course/StudentCourseCard'
-import SimpleReviewCard from '@/components/review/SimpleReviewCard'
+// import SimpleReviewCard from '@/components/review/SimpleReviewCard'
 import { BASE_URL_COURSE_SERVICE, BASE_URL_LECTURE_SERVICE, BASE_URL_REVIEW_SERVICE, BASE_URL_USER_SERVICE } from '@/utils/BaseURL'
 import { useParams } from 'next/navigation'
 
@@ -399,6 +399,7 @@ export default function CoursePage() {
         let lecturesData: Lecture[] = []
         try {
           lecturesData = await fetchLectures(courseId)
+          console.log('Fetched Lectures:', lecturesData) // Log the fetched lectures here
         } catch (error) {
           console.error('Error fetching lectures:', error.message || error)
         }
@@ -455,13 +456,19 @@ export default function CoursePage() {
           <div className="w-1/4">
             <h2 className="text-xl font-bold mb-3">Teacher</h2>
             {teacher ? (
-              <TeacherCard
-                name={teacher.userName || 'N/A'}
-                expertise={teacher.description || 'N/A'}
-                rating={course.totalReview}
-                students={course.countOrders} // Number of students in this course
-                urlAva={teacher.urlImage || course.urlAvt} // Use teacher's avatar if available
-              />
+              <div
+                className="cursor-pointer hover:shadow-lg transition-shadow rounded-lg"
+                onClick={() => (window.location.href = `/student/mentors/${teacher.id}`)}
+                tabIndex={0}
+                role="button">
+                <TeacherCard
+                  name={teacher.userName || 'N/A'}
+                  // expertise={teacher.description || 'N/A'}
+                  rating={course.totalReview}
+                  students={course.countOrders}
+                  urlAva={teacher.urlImage || course.urlAvt}
+                />
+              </div>
             ) : (
               <p>Loading teacher information...</p>
             )}
@@ -508,8 +515,27 @@ export default function CoursePage() {
                   <source src={selectedLecture.videoUrl} type="video/mp4" />
                   Your browser does not support the video tag.
                 </video>
-                <a href={selectedLecture.documentUrl} target="_blank" rel="noopener noreferrer" className="text-blue-500 underline">
-                  View Document
+                {selectedLecture.documentUrl && (
+                  <a
+                    href={selectedLecture.documentUrl}
+                    download
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-block mt-2 px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition">
+                    Download Document
+                  </a>
+                )}
+              </div>
+            ) : selectedLecture?.type === 'DOCUMENT' && selectedLecture.documentUrl ? (
+              <div className="flex flex-col items-start">
+                <p className="mb-4">{selectedLecture.description}</p>
+                <a
+                  href={selectedLecture.documentUrl}
+                  download
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-block px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition">
+                  Download Document
                 </a>
               </div>
             ) : (

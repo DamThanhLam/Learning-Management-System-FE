@@ -2,281 +2,129 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import ReviewCard from '@/components/student/profile/ReviewCard'
 import { BASE_URL_REVIEW_SERVICE, BASE_URL_COURSE_SERVICE } from '@/utils/BaseURL'
 import axios from 'axios'
-import Image from 'next/image'
 
 interface Review {
   id: number
-  courseId: number
-  courseTitle: string
-  author: string
-  rating: number
-  ratingCount: number
-  reviewText: string
-  imageUrl: string
+  courseId: string
+  userId: string
+  userName: string
+  review: number
+  content: string
   createdAt: string
 }
 
-interface Course {
-  id: string
+interface CourseInfo {
   courseName: string
-  teacherName: string
-  teacherId: string
-  totalReview: number
-  countReviews: number
-  price: number
-  urlAvt: string
+  urlAvt?: string
 }
-
-interface APIResponse {
-  code: number
-  data: Review[]
-  message: string
-  totalPages?: number
-  totalElements?: number
-}
-
-const PAGE_SIZE = 9
 
 export default function MyReviewsPage() {
-  const [search, setSearch] = useState('')
   const [reviews, setReviews] = useState<Review[]>([])
+  const [courses, setCourses] = useState<Record<string, CourseInfo>>({})
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [currentPage, setCurrentPage] = useState(1)
-  const [totalPages, setTotalPages] = useState(1)
-  const [sortBy, setSortBy] = useState('newest')
-  const [selectedCourseId, setSelectedCourseId] = useState<string | null>(null)
-  const [myCourses, setMyCourses] = useState<Course[]>([])
-  const [loadingCourses, setLoadingCourses] = useState(true)
 
-  // Fetch enrolled courses
-  const fetchMyCourses = async () => {
+  // Fetch all reviews made by the user
+  const fetchMyReviewed = async () => {
+    setLoading(true)
+    setError(null)
     try {
-      setLoadingCourses(true)
-      const response = await axios.get(`${BASE_URL_COURSE_SERVICE}/search`, {
-        params: {
-          page: 0,
-          size: 100
-        },
+      const response = await axios.get(`${BASE_URL_REVIEW_SERVICE}/my-reviewed`, {
         headers: {
           'Content-Type': 'application/json',
           Accept: 'application/json'
         },
         withCredentials: true
       })
-
       if (response.data.code === 200) {
-        setMyCourses(response.data.data)
-        console.log('Available courses:', response.data.data)
-      } else {
-        console.error('Failed to fetch courses:', response.data.message)
-      }
-    } catch (err) {
-      console.error('Error fetching courses:', err)
-    } finally {
-      setLoadingCourses(false)
-    }
-  }
-
-  // Fetch reviews for selected course
-  const fetchReviews = async () => {
-    if (!selectedCourseId) {
-      setError('Please select a course to view reviews')
-      setLoading(false)
-      return
-    }
-
-    try {
-      setLoading(true)
-      console.log('Fetching reviews for course:', selectedCourseId)
-
-      const response = await axios.get<APIResponse>(`${BASE_URL_REVIEW_SERVICE}/get-reviews-by-courseId`, {
-        params: {
-          courseId: selectedCourseId,
-          page: currentPage - 1,
-          size: PAGE_SIZE,
-          sort: sortBy === 'newest' ? 'createdAt,desc' : sortBy === 'oldest' ? 'createdAt,asc' : sortBy,
-          search: search || undefined
-        },
-        headers: {
-          'Content-Type': 'application/json',
-          Accept: 'application/json'
-        },
-        withCredentials: true
-      })
-
-      console.log('Reviews response:', response.data)
-
-      if (response.data.code === 200) {
-        const mappedReviews = response.data.data.map((review) => ({
-          id: review.id,
-          courseId: review.courseId,
-          courseTitle: review.courseTitle || 'Unknown Course',
-          userName: review.userName || 'Anonymous',
-          review: review.review || 0,
-          urlAvt: review.urlAvt || '/default-course-image.jpg',
-          content: review.content || '',
-          createdAt: review.createdAt
-        }))
-
-        console.log('Mapped reviews:', mappedReviews)
-
-        setReviews(mappedReviews)
-        setTotalPages(response.data.totalPages || Math.ceil(mappedReviews.length / PAGE_SIZE))
-        setError(null)
+        setReviews(response.data.data)
+        console.log('Fetched my reviews:', response.data.data)
+        // Fetch course info for each review
+        fetchCoursesForReviews(response.data.data)
       } else {
         setError(response.data.message || 'Failed to fetch reviews')
       }
     } catch (err: any) {
-      console.error('Error fetching reviews:', err)
-      setError(err.response?.data?.message || 'Failed to load reviews. Please try again later.')
+      setError('Failed to load your reviews.')
+      console.error(err)
     } finally {
       setLoading(false)
     }
   }
 
-  useEffect(() => {
-    fetchMyCourses()
-  }, [])
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      if (selectedCourseId) {
-        fetchReviews()
-      }
-    }, 500)
-
-    return () => clearTimeout(timer)
-  }, [currentPage, sortBy, search, selectedCourseId])
-
-  const handleSortChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setSortBy(e.target.value)
-    setCurrentPage(1)
-  }
-
-  const handlePageChange = (page: number) => {
-    setCurrentPage(page)
-    window.scrollTo({ top: 0, behavior: 'smooth' })
-  }
-
-  if (loadingCourses) {
-    return (
-      <div className="flex justify-center items-center min-h-[400px]">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
-      </div>
+  // Fetch course info for each review
+  const fetchCoursesForReviews = async (reviews: Review[]) => {
+    const courseIds = Array.from(new Set(reviews.map((r) => r.courseId)))
+    const newCourses: Record<string, CourseInfo> = {}
+    await Promise.all(
+      courseIds.map(async (courseId) => {
+        try {
+          const response = await fetch(`${BASE_URL_COURSE_SERVICE}?id=${courseId}`, {
+            method: 'GET',
+            credentials: 'include'
+          })
+          const res = await response.json()
+          if (res && res.data) {
+            newCourses[courseId] = {
+              courseName: res.data.courseName,
+              urlAvt: res.data.urlAvt
+            }
+          }
+        } catch (e) {
+          newCourses[courseId] = { courseName: 'Unknown Course' }
+        }
+      })
     )
+    console.log('Fetched courses for reviews:', newCourses) // Log the fetched courses here
+    setCourses(newCourses)
   }
+
+  useEffect(() => {
+    fetchMyReviewed()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   return (
     <div className="space-y-8 p-6">
-      {/* Search and Sort Section */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-6 border-b">
-        <h2 className="text-xl font-semibold">Course Reviews</h2>
-        <div className="flex items-center gap-4">
-          <div className="relative flex-1 sm:flex-none">
-            <input
-              type="text"
-              placeholder="Search Reviews"
-              className="w-full sm:w-auto pl-10 pr-4 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-300"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
-            <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">🔍</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-gray-700 whitespace-nowrap">Sort By</span>
-            <select title="option" className="border rounded px-3 py-2 text-sm" value={sortBy} onChange={handleSortChange}>
-              <option value="newest">Newest Reviews</option>
-              <option value="oldest">Oldest Reviews</option>
-            </select>
-          </div>
+      <h2 className="text-xl font-semibold">My Course Reviews</h2>
+      {loading ? (
+        <div className="flex justify-center items-center min-h-[200px]">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
         </div>
-      </div>
-
-      {/* Course List */}
-      <div className="mb-8">
+      ) : reviews.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {myCourses.map((course) => (
+          {reviews.map((review) => (
             <div
-              key={course.id}
-              className={`p-4 rounded-lg border-2 transition-all cursor-pointer ${
-                selectedCourseId === course.id ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-blue-300'
-              }`}
-              onClick={() => setSelectedCourseId(course.id)}>
-              <div className="flex items-center space-x-4">
-                <div className="relative w-16 h-16 rounded-full overflow-hidden">
-                  <Image src={course.urlAvt || '/default-teacher.jpg'} alt={course.teacherName} fill className="object-cover" />
+              key={review.id}
+              className="border rounded-lg overflow-hidden shadow-sm hover:shadow-md transition bg-white p-4 flex gap-4 cursor-pointer"
+              onClick={() => (window.location.href = `/student/courses/${review.courseId}`)}
+              tabIndex={0}
+              role="button">
+              <div className="w-24 h-24 flex-shrink-0 flex items-center justify-center bg-gray-100 rounded">
+                {courses[review.courseId]?.urlAvt ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={courses[review.courseId].urlAvt} alt={courses[review.courseId].courseName} className="object-cover w-24 h-24 rounded" />
+                ) : (
+                  <span className="text-gray-400 text-xs">No Image</span>
+                )}
+              </div>
+              <div className="flex-1">
+                <div className="mb-2">
+                  <span className="font-semibold text-base">{courses[review.courseId]?.courseName || 'Loading...'}</span>
+                  <span className="ml-2 text-xs text-gray-400">{new Date(review.createdAt).toLocaleDateString()}</span>
                 </div>
-                <div>
-                  <h3 className="font-semibold text-lg text-gray-800">{course.courseName}</h3>
-                  <p className="text-gray-600">Instructor: {course.teacherName}</p>
-                  <div className="flex items-center mt-1">
-                    <span className="text-yellow-500">★</span>
-                    <span className="ml-1 text-sm text-gray-600">
-                      {course.totalReview.toFixed(1)} ({course.countReviews} reviews)
-                    </span>
-                  </div>
+                <div className="flex items-center text-sm text-yellow-500 space-x-1 mb-2">
+                  <span>{'★'.repeat(review.review)}</span>
                 </div>
+                <p className="text-sm text-gray-700">{review.content}</p>
               </div>
             </div>
           ))}
         </div>
-      </div>
-
-      {/* Reviews Section */}
-      {selectedCourseId && (
-        <div className="mt-8 border-t pt-8">
-          <h2 className="text-xl font-semibold mb-6">
-            Reviews <span className="text-gray-500">({reviews.length})</span>
-          </h2>
-
-          {loading ? (
-            <div className="flex justify-center items-center min-h-[200px]">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
-            </div>
-          ) : reviews.length > 0 ? (
-            <>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {reviews.map((review) => (
-                  <ReviewCard key={review.id} userName={review.userName} review={review.review} urlAvt={review.urlAvt} content={review.content} />
-                ))}
-              </div>
-
-              {/* Pagination */}
-              {totalPages > 1 && (
-                <div className="flex justify-center mt-8">
-                  <div className="inline-flex items-center border rounded-md overflow-hidden text-sm">
-                    <button
-                      onClick={() => handlePageChange(currentPage - 1)}
-                      disabled={currentPage === 1}
-                      className="px-4 py-2 hover:bg-gray-100 disabled:opacity-50">
-                      &lt;
-                    </button>
-                    {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                      <button
-                        key={page}
-                        onClick={() => handlePageChange(page)}
-                        className={`px-4 py-2 ${page === currentPage ? 'bg-blue-500 text-white' : 'hover:bg-gray-100'}`}>
-                        {page}
-                      </button>
-                    ))}
-                    <button
-                      onClick={() => handlePageChange(currentPage + 1)}
-                      disabled={currentPage === totalPages}
-                      className="px-4 py-2 hover:bg-gray-100 disabled:opacity-50">
-                      &gt;
-                    </button>
-                  </div>
-                </div>
-              )}
-            </>
-          ) : (
-            <div className="text-center py-10 text-gray-500">No reviews found for this course.</div>
-          )}
-        </div>
+      ) : (
+        <div className="text-center py-10 text-gray-500">You have not reviewed any courses yet.</div>
       )}
     </div>
   )

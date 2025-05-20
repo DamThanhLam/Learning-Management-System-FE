@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react'
 import BuyCourseCard from '@/components/course/BuyCourseCard'
 import { BASE_URL_COURSE_SERVICE, BASE_URL_REVIEW_SERVICE, BASE_URL_USER_SERVICE } from '@/utils/BaseURL'
 import { toast } from 'react-toastify'
+import Link from 'next/link'
 
 interface Course {
   courseName: string
@@ -15,6 +16,7 @@ interface Course {
   price: number
   urlAvt: string
   teacherId: string
+  urlIntro: string
 }
 
 interface Teacher {
@@ -170,21 +172,23 @@ export default function CourseDetailsPage({ params }: { params: Promise<{ 'cours
   const renderTabContent = () => {
     switch (activeTab) {
       case 'teacher':
-        const teacherData = teacher || dummyTeacher // Use fetched teacher or fallback
+        const teacherData = teacher || dummyTeacher
         return (
           <div>
             <h2 className="text-xl font-bold mb-3">About the Teacher</h2>
-            <div className="flex items-center gap-4">
-              <img
-                src={teacherData.urlImage || 'https://via.placeholder.com/150'} // Fallback for missing image
-                alt={teacherData.userName || 'Unknown Teacher'}
-                className="w-20 h-20 rounded-full border border-gray-300"
-              />
-              <div>
-                <p className="text-lg font-semibold">{teacherData.userName || 'Unknown Teacher'}</p>
-                <p className="text-gray-600">{teacherData.description || 'No description available.'}</p>
+            <Link href={`/student/mentors/${teacherData.id}`} className="block">
+              <div className="flex items-center gap-4 cursor-pointer hover:bg-gray-100 p-3 rounded transition">
+                <img
+                  src={teacherData.urlImage || 'https://via.placeholder.com/150'}
+                  alt={teacherData.userName || 'Unknown Teacher'}
+                  className="w-20 h-20 rounded-full border border-gray-300"
+                />
+                <div>
+                  <p className="text-lg font-semibold">{teacherData.userName || 'Unknown Teacher'}</p>
+                  <p className="text-gray-600">{teacherData.description || 'No description available.'}</p>
+                </div>
               </div>
-            </div>
+            </Link>
           </div>
         )
       case 'reviews':
@@ -289,7 +293,6 @@ export default function CourseDetailsPage({ params }: { params: Promise<{ 'cours
               purchased={isPurchased}
               onAddToCart={() => handleAddToCart(courseId!)}
               onBuyNow={() => {
-                // Navigate to the checkout page with the courseId as a query param
                 window.location.href = `/student/shopping-cart/checkout?courseIds=${courseId}`
               }}
               onLearnNow={() => (window.location.href = `/student/courses/${courseId}/learning`)}
@@ -297,6 +300,19 @@ export default function CourseDetailsPage({ params }: { params: Promise<{ 'cours
           </div>
         </div>
       </div>
+
+      {/* Intro Video Section */}
+      {course.urlIntro && (
+        <div className="w-full max-w-6xl bg-white rounded-lg shadow-lg p-8 mt-8">
+          <h2 className="text-2xl font-bold mb-4 text-blue-700">Course Introduction</h2>
+          {/* <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-4 flex justify-center items-center"> */}
+          <video controls className="w-full max-w-3xl rounded-lg" poster={course.urlAvt} style={{ maxHeight: 400, background: '#000' }}>
+            <source src={course.urlIntro} type="video/mp4" />
+            Your browser does not support the video tag.
+          </video>
+          {/* </div> */}
+        </div>
+      )}
 
       {/* Tab Section */}
       <div className="w-full max-w-6xl bg-white rounded-lg shadow-lg p-8 mt-8">
