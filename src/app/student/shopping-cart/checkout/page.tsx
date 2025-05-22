@@ -80,7 +80,6 @@ export default function CheckoutPage() {
       .then((data) => {
         if (data.code === 200) {
           window.location.href = data.urlPayment
-          // window.location.href = '/student/shopping-cart/checkout/order-complete'
         } else {
           alert(data.message)
         }
