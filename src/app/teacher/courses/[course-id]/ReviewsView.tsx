@@ -46,7 +46,11 @@ export default function ReviewsView() {
 
     fetch(url, {
       method: "GET",
-      credentials: 'include'
+      credentials: 'include',
+      headers:{
+          Authorization: "Bearer " + window.localStorage.getItem("access_token"),
+
+      }
     })
       .then(res => res.json())
       .then(data => {

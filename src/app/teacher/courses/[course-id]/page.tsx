@@ -35,7 +35,11 @@ export default function page() {
   useEffect(() => {
     fetch(BASE_URL_COURSE_SERVICE + "?id=" + courseId, {
       credentials: 'include',
-      method: "GET"
+      method: "GET",
+      headers:{
+          Authorization: "Bearer " + window.localStorage.getItem("access_token"),
+
+      }
     })
       .then(res => res.json())
       .then(data => {

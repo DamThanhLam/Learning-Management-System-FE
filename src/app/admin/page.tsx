@@ -1,9 +1,18 @@
-import React from 'react';
+"use client"
+import React, { useEffect } from 'react';
 import ChartSection from '@/components/ChartSection';
+import { checkLogin } from '@/utils/API';
 
 
 
 const Dashboard = () => {
+  useEffect(() => {
+    checkLogin().then(data => {
+    }).catch(e => {
+      window.location.href = "/login"
+
+    })
+  }, [])
   return (
     <div className="p-6 bg-gray-100 min-h-screen">
       <h1 className="text-2xl font-semibold mb-6">Dashboard</h1>

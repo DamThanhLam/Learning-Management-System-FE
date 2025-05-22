@@ -1,12 +1,13 @@
 "use client";
 
-import { BASE_URL_USER_SERVICE } from "@/utils/BaseURL";
 import encryptPassword from "@/utils/rsa";
 import { useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
 import { getAuth, isSignInWithEmailLink, onAuthStateChanged, sendEmailVerification, sendSignInLinkToEmail, signInWithEmailLink } from "firebase/auth";
 import { actionCodeSettings, app } from "@/config/firebase";
 import { useRouter } from "next/navigation";
+import { BASE_URL_AUTH_SERVICE } from "@/utils/BaseURL";
+import { checkLogin } from "@/utils/API";
 
 const auth = getAuth(app);
 const Login: React.FC = () => {
@@ -14,51 +15,28 @@ const Login: React.FC = () => {
   const [password, setPassword] = useState("");
   const [role, setRole] = useState("student");
   const router = useRouter()
-  const handleSubmit = async (e: React.FormEvent) => {
-    const auth = getAuth();
-    // onAuthStateChanged(auth, (user) => {
-    //   if (user) {
-    //     sendEmailVerification(auth.currentUser)
-    //       .then(() => {
-    //         // Email verification sent!
-    //         // ...
-    //       });
-    //   } else {
-    //     // User is signed out
-    //     // ...
-    //   }
-    // });
-    // if (auth.currentUser) {
-    //   sendSignInLinkToEmail(auth, email, actionCodeSettings)
-    //     .then(() => {
-    //       // The link was successfully sent. Inform the user.
-    //       // Save the email locally so you don't need to ask the user for it again
-    //       // if they open the link on the same device.
-    //       window.localStorage.setItem('emailForSignIn', email);
-    //       window.localStorage.setItem('passwordForSignIn', encryptPassword(password));
-    //       router.push("/login/notification-send-link")
-    //       // ...
-    //     })
-    //     .catch((error) => {
-    //       const errorCode = error.code;
-    //       const errorMessage = error.message;
-    //       console.log(errorMessage)
-    //       // ...
-    //     });
-    // }else{
+  const [groups, setGroups] = useState<string[]>([]);
+  const [user, setUser] = useState<any>(null);
 
-    // }
-    fetch(BASE_URL_USER_SERVICE + "/login", {
+  useEffect(() => {
+    checkLogin().then(data => {
+      window.location.href = "/"
+    })
+  }, [])
+  const handleSubmit = async (e: React.FormEvent) => {
+
+    fetch(BASE_URL_AUTH_SERVICE + "/login", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ email, password: encryptPassword(password)}),
-      credentials: "include",
+      body: JSON.stringify({ email, password: encryptPassword(password) }),
     }).then(res => res.json())
       .then(data => {
         console.log(data)
         if (data.code === 200) {
+          window.localStorage.setItem("access_token", data.access_token)
+          window.localStorage.setItem("refresh_token", data.refresh_token)
           window.localStorage.setItem("email", email)
           window.location.href = "/"
         }

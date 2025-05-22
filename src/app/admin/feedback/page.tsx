@@ -1,5 +1,16 @@
+"use client"
+import { checkLogin } from "@/utils/API";
+import { useEffect } from "react";
+
 // app/page.tsx
 export default function Page() {
+   useEffect(() => {
+      checkLogin().then(data => {
+      }).catch(e => {
+        window.location.href = "/login"
+  
+      })
+    }, [])
     return (
       <div className="flex-1 h-screen  overflow-y-auto no-scrollbar bg-gray-100">
         {/* Khu vực nội dung chính */}

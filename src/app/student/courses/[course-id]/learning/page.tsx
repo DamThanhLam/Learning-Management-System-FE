@@ -54,6 +54,9 @@ const fetchLectures = async (courseId: string, chapter?: number) => {
 
     const response = await fetch(url.toString(), {
       method: 'GET',
+      headers: {
+        Authorization: "Bearer " + window.localStorage.getItem("access_token"),
+      },
       credentials: 'include'
     })
 
@@ -88,6 +91,9 @@ const submitReview = async (reviewData: FormData) => {
     const response = await fetch(`${BASE_URL_REVIEW_SERVICE}`, {
       method: 'POST',
       body: reviewData,
+      headers: {
+        Authorization: "Bearer " + window.localStorage.getItem("access_token"),
+      },
       credentials: 'include'
     })
 
@@ -115,7 +121,8 @@ const checkIfReviewed = async (courseId: string, userId: string) => {
     const response = await fetch(`${BASE_URL_REVIEW_SERVICE}/api/v1/reviews/reviewed`, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        Authorization: "Bearer " + window.localStorage.getItem("access_token"),
       },
       body: JSON.stringify({ courseId, userId }),
       credentials: 'include'
@@ -150,6 +157,9 @@ const ReviewSection = ({ courseId }: { courseId: string | null }) => {
         // Fetch all reviews for the course
         const response = await fetch(`${BASE_URL_REVIEW_SERVICE}/get-reviews-by-courseId?courseId=${courseId}`, {
           method: 'GET',
+          headers:{
+             Authorization: "Bearer " + window.localStorage.getItem("access_token"),
+          },
           credentials: 'include'
         })
 
@@ -171,6 +181,9 @@ const ReviewSection = ({ courseId }: { courseId: string | null }) => {
         // Check if the user has reviewed the course
         const response = await fetch(`${BASE_URL_REVIEW_SERVICE}/reviewed?courseId=${courseId}`, {
           method: 'GET',
+          headers:{
+             Authorization: "Bearer " + window.localStorage.getItem("access_token"),
+          },
           credentials: 'include'
         })
 
@@ -349,6 +362,9 @@ export default function CoursePage() {
     try {
       const response = await fetch(`${BASE_URL_USER_SERVICE}?id=${teacherId}`, {
         method: 'GET',
+        headers:{
+           Authorization: "Bearer " + window.localStorage.getItem("access_token"),
+        },
         credentials: 'include'
       })
 
@@ -379,6 +395,9 @@ export default function CoursePage() {
 
         const courseResponse = await fetch(`${BASE_URL_COURSE_SERVICE}?id=${courseId}`, {
           method: 'GET',
+          headers:{
+             Authorization: "Bearer " + window.localStorage.getItem("access_token"),
+          },
           credentials: 'include'
         })
 
@@ -408,6 +427,9 @@ export default function CoursePage() {
         try {
           const reviewsResponse = await fetch(`${BASE_URL_REVIEW_SERVICE}/get-reviews-by-courseId?courseId=${courseId}`, {
             method: 'GET',
+            headers:{
+               Authorization: "Bearer " + window.localStorage.getItem("access_token"),
+            },
             credentials: 'include'
           })
           const reviewsJson = await reviewsResponse.json()
@@ -528,9 +550,8 @@ export default function CoursePage() {
                 .map((lecture) => (
                   <li
                     key={lecture.id}
-                    className={`cursor-pointer p-3 rounded-lg mb-2 text-left ${
-                      lecture.id === selectedLecture?.id ? 'bg-gray-200 font-bold' : 'hover:bg-gray-100'
-                    }`}
+                    className={`cursor-pointer p-3 rounded-lg mb-2 text-left ${lecture.id === selectedLecture?.id ? 'bg-gray-200 font-bold' : 'hover:bg-gray-100'
+                      }`}
                     onClick={() => setSelectedLecture(lecture)}>
                     <div className="flex justify-between items-center">
                       <span>

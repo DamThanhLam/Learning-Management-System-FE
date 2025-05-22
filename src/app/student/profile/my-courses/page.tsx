@@ -68,6 +68,8 @@ export default function MyCoursesPage() {
       const response = await axios.get<APIResponse>(`${BASE_URL_COURSE_SERVICE}/student`, {
         headers: {
           'Content-Type': 'application/json',
+          Authorization: "Bearer " + window.localStorage.getItem("access_token"),
+
           Accept: 'application/json'
         },
         withCredentials: true

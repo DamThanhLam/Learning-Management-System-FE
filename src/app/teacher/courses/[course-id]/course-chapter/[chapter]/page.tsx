@@ -42,7 +42,13 @@ export default function ChapterManagement() {
       try {
         const res = await fetch(
           `${BASE_URL_LECTURE_SERVICE}?id=${lectureId}`,
-          { credentials: 'include' }
+          {
+            credentials: 'include',
+            headers: {
+              Authorization: "Bearer " + window.localStorage.getItem("access_token"),
+
+            }
+          }
         );
         if (!res.ok) throw new Error('Failed to load');
         const data = await res.json();
@@ -60,7 +66,11 @@ export default function ChapterManagement() {
     // Fetch user info (optional)
     fetch(`${BASE_URL_USER_SERVICE}/own`, {
       credentials: 'include',
-      headers: { 'Content-Type': 'application/json' }
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: "Bearer " + window.localStorage.getItem("access_token"),
+
+      }
     });
   }, [courseId, lectureId]);
 
@@ -102,13 +112,13 @@ export default function ChapterManagement() {
     else {
       const sizeMB = file.size / (1024 * 1024);
       if (typeKey === 'File') {
-        if (!['text/plain','application/pdf','application/msword','application/vnd.openxmlformats-officedocument.wordprocessingml.document'].includes(file.type)) error = 'Only TXT, PDF, DOC/DOCX allowed';
+        if (!['text/plain', 'application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'].includes(file.type)) error = 'Only TXT, PDF, DOC/DOCX allowed';
         else if (sizeMB > 15) error = 'Max 15MB';
       } else if (typeKey === 'Video') {
-        if (!['video/mp4','video/quicktime'].includes(file.type)) error = 'Only MP4, MOV allowed';
+        if (!['video/mp4', 'video/quicktime'].includes(file.type)) error = 'Only MP4, MOV allowed';
         else if (sizeMB > 1024) error = 'Max 1GB';
       } else if (typeKey === 'Thumbnail') {
-        if (!['image/jpeg','image/png'].includes(file.type)) error = 'Only JPEG, PNG allowed';
+        if (!['image/jpeg', 'image/png'].includes(file.type)) error = 'Only JPEG, PNG allowed';
         else if (sizeMB > 15) error = 'Max 15MB';
       }
     }
@@ -118,7 +128,7 @@ export default function ChapterManagement() {
       if (typeKey === 'File' && file.type === 'text/plain') {
         const reader = new FileReader();
         reader.onload = e => {
-          const text = typeof e.target?.result === 'string' ? e.target.result.substring(0,200) : '';
+          const text = typeof e.target?.result === 'string' ? e.target.result.substring(0, 200) : '';
           setFilePreviews(prev => ({ ...prev, File: text }));
         };
         reader.readAsText(file);
@@ -129,7 +139,7 @@ export default function ChapterManagement() {
   };
 
   // Submit handler
-  const handleUpdate = async (status: 'DRAFT'|'PUBLISHED') => {
+  const handleUpdate = async (status: 'DRAFT' | 'PUBLISHED') => {
     // validate details
     if (!title.trim()) setTitleError('Title is required');
     if (!description.trim()) setDescError('Description is required');
@@ -148,9 +158,9 @@ export default function ChapterManagement() {
     //   });
     // }
     // abort on errors
-    const hasDetailErrors = !!(titleError||descError||chapterError);
+    const hasDetailErrors = !!(titleError || descError || chapterError);
     const hasResourceErrors = Object.values(resources).some(r => r.error);
-    if (hasDetailErrors||hasResourceErrors) return;
+    if (hasDetailErrors || hasResourceErrors) return;
 
     try {
       const formData = new FormData();
@@ -166,7 +176,13 @@ export default function ChapterManagement() {
       });
       const res = await fetch(
         `${BASE_URL_LECTURE_SERVICE}/courses/${courseId}/lectures/${lectureId}`,
-        { method: 'PUT', body: formData, credentials: 'include' }
+        {
+          method: 'PUT', body: formData, credentials: 'include',
+          headers: {
+            Authorization: "Bearer " + window.localStorage.getItem("access_token"),
+
+          }
+        }
       );
       if (!res.ok) throw new Error('Add chapter failed');
       alert('Chapter updated successfully');
@@ -197,14 +213,14 @@ export default function ChapterManagement() {
         </header>
 
         <nav className="flex space-x-6 border-b">
-          {['Details','Resources'].map(tab => (
+          {['Details', 'Resources'].map(tab => (
             <button key={tab} onClick={() => setActiveTab(tab as any)}
-              className={`pb-2 text-sm font-medium ${activeTab===tab?'text-blue-500 border-b-2 border-blue-500':'text-gray-500'}`}
+              className={`pb-2 text-sm font-medium ${activeTab === tab ? 'text-blue-500 border-b-2 border-blue-500' : 'text-gray-500'}`}
             >{tab}</button>
           ))}
         </nav>
 
-        {activeTab==='Details' && (
+        {activeTab === 'Details' && (
           <div className="mt-6 space-y-4">
             <div>
               <label className="block text-sm">Chapter*</label>
@@ -228,7 +244,7 @@ export default function ChapterManagement() {
             </div>
           </div>
         )}
-        {activeTab==='Resources' && (
+        {activeTab === 'Resources' && (
           <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-6">
             {(Object.keys(resources) as ResourceType[]).map(typeKey => {
               const { file, error } = resources[typeKey];
@@ -241,43 +257,43 @@ export default function ChapterManagement() {
                   <input
                     type="file"
                     accept={
-                      typeKey==='File'?'.txt,.pdf,.doc,.docx':typeKey==='Video'?'video/mp4,video/quicktime':'image/jpeg,image/png'
+                      typeKey === 'File' ? '.txt,.pdf,.doc,.docx' : typeKey === 'Video' ? 'video/mp4,video/quicktime' : 'image/jpeg,image/png'
                     }
-                    ref={el=>inputRefs.current[typeKey]=el}
+                    ref={el => inputRefs.current[typeKey] = el}
                     onChange={handleFileSelect(typeKey)}
-                    style={{display:'none'}}
+                    style={{ display: 'none' }}
                   />
 
                   {/* Preview area */}
                   <div className="h-40 flex items-center justify-center bg-gray-50 rounded overflow-hidden">
-                    {typeKey==='Thumbnail' && (file?
-                      <img src={URL.createObjectURL(file)} alt="thumb" className="h-full" />:
+                    {typeKey === 'Thumbnail' && (file ?
+                      <img src={URL.createObjectURL(file)} alt="thumb" className="h-full" /> :
                       preview && <img src={preview} alt="thumb" className="h-full" />)}
-                    {typeKey==='Video' && (file?
-                      <video src={URL.createObjectURL(file)} controls className="max-h-full" />:
+                    {typeKey === 'Video' && (file ?
+                      <video src={URL.createObjectURL(file)} controls className="max-h-full" /> :
                       preview && <video src={preview} controls className="max-h-full" />)}
-                    {typeKey==='File' && ((file||preview)?(
-                      <a href={file?URL.createObjectURL(file):preview} target="_blank" rel="noreferrer"
+                    {typeKey === 'File' && ((file || preview) ? (
+                      <a href={file ? URL.createObjectURL(file) : preview} target="_blank" rel="noreferrer"
                         className="text-blue-600 underline text-sm text-center">
-                        {file?file.name:preview.split('/').pop()}</a>
-                      ):(<span className="text-gray-500">No file</span>))}
+                        {file ? file.name : preview.split('/').pop()}</a>
+                    ) : (<span className="text-gray-500">No file</span>))}
                   </div>
 
                   {/* Dropzone / click */}
                   <div
                     onDrop={handleDrop(typeKey)} onDragOver={handleDragOver}
-                    onClick={()=>inputRefs.current[typeKey]?.click()}
+                    onClick={() => inputRefs.current[typeKey]?.click()}
                     className="flex flex-col items-center p-4 border-dashed border-2 border-gray-300 rounded cursor-pointer"
                   >
                     <span className="text-2xl">📂</span>
-                    <p className="mt-2 text-sm">{file?file.name:'Drag & drop or '}<span className="underline text-blue-500">Browse</span></p>
+                    <p className="mt-2 text-sm">{file ? file.name : 'Drag & drop or '}<span className="underline text-blue-500">Browse</span></p>
                   </div>
 
                   {/* Constraints hint */}
                   <p className="text-xs text-gray-500 text-center">
-                    {typeKey==='File' && 'TXT, DOC/DOCX, PDF (max 15MB)'}
-                    {typeKey==='Video' && 'MP4, MOV (max 1GB)'}
-                    {typeKey==='Thumbnail' && 'JPEG, PNG (max 15MB)'}
+                    {typeKey === 'File' && 'TXT, DOC/DOCX, PDF (max 15MB)'}
+                    {typeKey === 'Video' && 'MP4, MOV (max 1GB)'}
+                    {typeKey === 'Thumbnail' && 'JPEG, PNG (max 15MB)'}
                   </p>
                   {error && <p className="text-red-500 text-sm">{error}</p>}
                 </div>

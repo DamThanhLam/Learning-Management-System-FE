@@ -18,6 +18,8 @@ export default function Courses() {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
+          Authorization: "Bearer " + window.localStorage.getItem("access_token"),
+
       },
       credentials: "include",
     }).then(res => res.json())

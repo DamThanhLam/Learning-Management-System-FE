@@ -12,6 +12,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { BASE_URL_PAYMENT_SERVICE } from "@/utils/BaseURL";
+import { checkLogin } from "@/utils/API";
 
 interface PayoutSingle {
   id: string;
@@ -34,7 +35,13 @@ export default function BillingPage() {
   // Month options with 'all' instead of empty string
   const monthOptions = ["all", ...Array.from({ length: 12 }, (_, i) => `${i + 1}`)];
   const statusOptions = ["All status", "REQUIRE", "PENDING", "SUCCESS", "REFUSE", "ERROR"];
+  useEffect(() => {
+    checkLogin().then(data => {
+    }).catch(e => {
+      window.location.href = "/login"
 
+    })
+  }, [])
   useEffect(() => {
     fetchPayouts();
   }, [year, month]);
@@ -45,7 +52,11 @@ export default function BillingPage() {
       if (month !== "all") params.month = parseInt(month, 10);
       const res = await axios.get(
         `${BASE_URL_PAYMENT_SERVICE}/admin/payout`,
-        { params, withCredentials: true }
+        {
+          params, withCredentials: true, headers: {
+            Authorization: "Bearer " + window.localStorage.getItem("access_token"),
+          }
+        }
       );
       const list: PayoutSingle[] = res.data.data || [];
       setData(list);

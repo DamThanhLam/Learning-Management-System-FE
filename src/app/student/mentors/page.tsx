@@ -53,7 +53,11 @@ const Profile = () => {
         // TODO: Fetch mentor data from API
         const fetchMentorData = async () => {
             try {
-                const response = await fetch(BASE_URL_USER_SERVICE + "?id=" + id);
+                const response = await fetch(BASE_URL_USER_SERVICE + "?id=" + id, {
+                    headers: {
+                        Authorization: "Bearer " + window.localStorage.getItem("access_token"),
+                    }
+                });
                 const data = await response.json();
                 // setMentorData(data);
             } catch (error) {
@@ -105,7 +109,7 @@ const Profile = () => {
                         <section className="bg-white p-6 rounded-lg">
                             <h2 className="text-xl font-bold mb-4">Areas of Expertise</h2>
                             <ul className="space-y-3">
-                                {mentorData.expertise&&mentorData.expertise.map((item, index) => (
+                                {mentorData.expertise && mentorData.expertise.map((item, index) => (
                                     <li key={index} className="flex items-center">
                                         <span className="w-2 h-2 bg-blue-500 rounded-full mr-3"></span>
                                         <span className="text-gray-700">{item}</span>
@@ -134,7 +138,7 @@ const Profile = () => {
                                     />
                                 </div>
                                 <div className="flex flex-col space-y-3 w-48 mx-auto mt-6">
-                                    {mentorData.contacts&&mentorData.contacts.map(([label, url], index) => (
+                                    {mentorData.contacts && mentorData.contacts.map(([label, url], index) => (
                                         <a
                                             key={index}
                                             href={url}

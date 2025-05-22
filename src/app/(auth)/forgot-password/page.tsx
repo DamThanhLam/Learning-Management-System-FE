@@ -7,8 +7,9 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
-import { BASE_URL_USER_SERVICE } from '@/utils/BaseURL';
 import encryptPassword from '@/utils/rsa';
+import { BASE_URL_AUTH_SERVICE } from '@/utils/BaseURL';
+import { checkLogin } from '@/utils/API';
 
 interface Account {
   id: string;
@@ -30,12 +31,17 @@ const ForgotPassword: React.FC = () => {
   const [timer, setTimer] = useState<number>(60);
   const [isResendEnabled, setIsResendEnabled] = useState<boolean>(false);
 
+  useEffect(()=>{
+    checkLogin().then(data=>{
+      window.location.href="/"
+    })
+  },[])
   // Step 1: Search by email and fetch account
   const handleSearch = async () => {
     try {
       setError('');
       const response = await axios.get<Account>(
-        `${BASE_URL_USER_SERVICE}/search`,
+        `${BASE_URL_AUTH_SERVICE}/search`,
         { params: { email } }
       );
       setAccount(response.data);
@@ -51,7 +57,7 @@ const ForgotPassword: React.FC = () => {
     try {
       setError('');
       await axios.get(
-        `${BASE_URL_USER_SERVICE}/send-otp`,
+        `${BASE_URL_AUTH_SERVICE}/send-otp`,
         { params: { email } }
       );
       // Move to OTP step if not already
@@ -74,7 +80,7 @@ const ForgotPassword: React.FC = () => {
     try {
       setError('');
       await axios.post(
-        `${BASE_URL_USER_SERVICE}/forgot-password`,
+        `${BASE_URL_AUTH_SERVICE}/forgot-password`,
         { email, otpCode: otp, password: encryptPassword(newPassword) }
       );
       setStep(4);

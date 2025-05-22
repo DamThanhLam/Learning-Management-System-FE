@@ -24,19 +24,23 @@ export default function ChaptersView() {
   useEffect(() => {
     fetch(BASE_URL_LECTURE_SERVICE + "/teacher/courses/" + courseId + "/lectures", {
       method: 'GET',
+      headers: {
+        Authorization: "Bearer " + window.localStorage.getItem("access_token"),
+
+      },
       credentials: "include",
     }).then(res => res.json())
       .then(data => {
-        setData(data.lectures||[])
+        setData(data.lectures || [])
       })
   }, [])
   return (
     <div>
       <div className="flex justify-end mb-4">
         <button className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-        onClick={()=>{
-          router.push("/teacher/courses/"+courseId+"/course-chapter/create")
-        }}>
+          onClick={() => {
+            router.push("/teacher/courses/" + courseId + "/course-chapter/create")
+          }}>
           + Add Chapter
         </button>
       </div>

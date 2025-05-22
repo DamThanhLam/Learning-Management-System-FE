@@ -60,7 +60,10 @@ export default function CourseDetailsPage({ params }: { params: Promise<{ 'cours
       try {
         const response = await fetch(`${BASE_URL_COURSE_SERVICE}?id=${courseId}`, {
           method: 'GET',
-          credentials: 'include'
+          credentials: 'include',
+          headers: {
+            Authorization: "Bearer " + window.localStorage.getItem("refresh_token"),
+          }
         })
 
         if (!response.ok) {
@@ -91,6 +94,9 @@ export default function CourseDetailsPage({ params }: { params: Promise<{ 'cours
     try {
       const response = await fetch(`${BASE_URL_COURSE_SERVICE}/check-course-purchase?courseId=${courseId}`, {
         method: 'GET',
+        headers: {
+          Authorization: "Bearer " + window.localStorage.getItem("refresh_token"),
+        },
         credentials: 'include' // Include cookies for authentication
       })
 
@@ -111,6 +117,9 @@ export default function CourseDetailsPage({ params }: { params: Promise<{ 'cours
     try {
       const response = await fetch(`${BASE_URL_USER_SERVICE}?id=${teacherId}`, {
         method: 'GET',
+        headers: {
+          Authorization: "Bearer " + window.localStorage.getItem("refresh_token"),
+        },
         credentials: 'include'
       })
 
@@ -135,6 +144,9 @@ export default function CourseDetailsPage({ params }: { params: Promise<{ 'cours
         console.log('Fetching reviews for courseId:', courseId) // Debug log
         const response = await fetch(`${BASE_URL_REVIEW_SERVICE}/get-reviews-by-courseId?courseId=${courseId}`, {
           method: 'GET',
+          headers: {
+            Authorization: "Bearer " + window.localStorage.getItem("refresh_token"),
+          },
           credentials: 'include'
         })
 
@@ -233,7 +245,8 @@ export default function CourseDetailsPage({ params }: { params: Promise<{ 'cours
       const response = await fetch(`${BASE_URL_COURSE_SERVICE}/shopping-cart`, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          Authorization: "Bearer " + window.localStorage.getItem("access_token"),
         },
         credentials: 'include',
         body: JSON.stringify({ courseId })

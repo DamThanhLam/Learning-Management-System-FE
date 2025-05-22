@@ -22,12 +22,16 @@ const ChangePassword = () => {
       setError("New passwords do not match.");
       return;
     }
-    
+
     // TODO: Gửi API đổi mật khẩu tại đây
     fetch(BASE_URL_USER_SERVICE + "/change-password", {
-      method:"POST",
+      method: "POST",
       credentials: 'include',
-      headers:{"Content-Type":"application/json"},
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: "Bearer " + window.localStorage.getItem("access_token"),
+
+      },
       body: JSON.stringify({ oldPassword: encryptPassword(currentPassword), newPassword: encryptPassword(newPassword) })
     })
       .then(res => res.json())

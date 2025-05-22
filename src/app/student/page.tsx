@@ -7,6 +7,7 @@ import TopCategoryCard from '@/components/category/TopCategoryCard'
 import TopReviewCard from '@/components/review/TopReviewCard'
 import { BASE_URL_COURSE_SERVICE } from '@/utils/BaseURL'
 import { useRouter } from 'next/navigation'
+import { checkLogin } from '@/utils/API'
 
 export default function HomePage() {
   const stats = [
@@ -50,7 +51,13 @@ export default function HomePage() {
 
     fetchCategories()
   }, [])
+  useEffect(() => {
+    checkLogin().then(data => {
+    }).catch(e => {
+      window.location.href = "/login"
 
+    })
+  }, [])
   // Fetch top courses from the backend
   useEffect(() => {
     const fetchCourses = async () => {

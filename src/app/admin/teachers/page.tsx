@@ -3,6 +3,8 @@
 import { useCallback, useEffect, useState } from "react";
 import { Search, ChevronDown } from "lucide-react"; // ✅ Import icon hiện đại
 import TeacherReviewModal from "@/components/teacher/TeacherReviewModal"; // ✅ import modal đúng
+import { checkLogin } from "@/utils/API";
+import { BASE_URL_TEACHER_MANAGEMENT_SERVICE } from "@/utils/BaseURL";
 
 interface RequireAccount {
   id: string;
@@ -43,17 +45,17 @@ const TeacherApplication = () => {
     key: keyof RequireAccount | "status" | "action";
     label: string;
   }[] = [
-    { key: "userName", label: "Username" },
-    { key: "email", label: "Email" },
-    { key: "phoneNumber", label: "Phone" },
-    { key: "birthday", label: "Birthday" },
-    { key: "gender", label: "Gender" },
-    { key: "description", label: "Description" },
-    { key: "urlImage", label: "Avatar" },
-    { key: "cvFile", label: "CV" },
-    { key: "status", label: "Status" }, // virtual key
-    { key: "action", label: "Action" }, // virtual key
-  ];
+      { key: "userName", label: "Username" },
+      { key: "email", label: "Email" },
+      { key: "phoneNumber", label: "Phone" },
+      { key: "birthday", label: "Birthday" },
+      { key: "gender", label: "Gender" },
+      { key: "description", label: "Description" },
+      { key: "urlImage", label: "Avatar" },
+      { key: "cvFile", label: "CV" },
+      { key: "status", label: "Status" }, // virtual key
+      { key: "action", label: "Action" }, // virtual key
+    ];
 
   // Cột nào đang được hiển thị
   const [visibleColumns, setVisibleColumns] = useState<string[]>(
@@ -85,11 +87,11 @@ const TeacherApplication = () => {
       const token = getCookie("access_token");
 
       const res = await fetch(
-        `http://localhost:8082/api/v1/teacher/count?role=TEACHER`,
+        BASE_URL_TEACHER_MANAGEMENT_SERVICE+`/count?role=TEACHER`,
         {
           headers: {
             "Content-Type": "application/json",
-            Authorization: token ? `Bearer ${token}` : "",
+            Authorization: "Bearer " + window.localStorage.getItem("access_token"),
           },
           credentials: "include",
         }
@@ -101,12 +103,19 @@ const TeacherApplication = () => {
       console.error("Failed to fetch count by status", error);
     }
   };
+  useEffect(() => {
+    checkLogin().then(data => {
+    }).catch(e => {
+      window.location.href = "/login"
+
+    })
+  }, [])
   const fetchData = useCallback(
     async (filters: Partial<typeof advancedFilters> = {}) => {
       try {
         const token = getCookie("access_token");
 
-        let url = "http://localhost:8082/api/v1/teacher/search";
+        let url = BASE_URL_TEACHER_MANAGEMENT_SERVICE + "/search";
 
         const params = new URLSearchParams();
         if (type !== "all") params.append("accountStatus", type);
@@ -120,7 +129,7 @@ const TeacherApplication = () => {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization: token ? `Bearer ${token}` : "",
+            Authorization: "Bearer " + window.localStorage.getItem("access_token"),
           },
           credentials: "include",
           body: JSON.stringify(filters),
@@ -179,9 +188,9 @@ const TeacherApplication = () => {
               const count =
                 status === "ALL"
                   ? Object.values(statusCounts).reduce(
-                      (sum, val) => sum + val,
-                      0
-                    )
+                    (sum, val) => sum + val,
+                    0
+                  )
                   : statusCounts[status] || 0;
 
               return (
@@ -395,8 +404,8 @@ const TeacherApplication = () => {
                       advancedFilters.hasAva === undefined
                         ? ""
                         : advancedFilters.hasAva
-                        ? "true"
-                        : "false"
+                          ? "true"
+                          : "false"
                     }
                     onChange={(e) =>
                       setAdvancedFilters((prev) => ({
@@ -419,8 +428,8 @@ const TeacherApplication = () => {
                       advancedFilters.hasCV === undefined
                         ? ""
                         : advancedFilters.hasCV
-                        ? "true"
-                        : "false"
+                          ? "true"
+                          : "false"
                     }
                     onChange={(e) =>
                       setAdvancedFilters((prev) => ({
@@ -478,27 +487,26 @@ const TeacherApplication = () => {
                 .map((col) => (
                   <th
                     key={col.key}
-                    className={`text-left px-3 py-2 truncate ${
-                      col.key === "userName"
-                        ? "w-36 max-w-[150px]"
-                        : col.key === "email"
+                    className={`text-left px-3 py-2 truncate ${col.key === "userName"
+                      ? "w-36 max-w-[150px]"
+                      : col.key === "email"
                         ? "w-48 max-w-[200px]"
                         : col.key === "phoneNumber"
-                        ? "w-28"
-                        : col.key === "birthday"
-                        ? "w-28"
-                        : col.key === "gender"
-                        ? "w-20"
-                        : col.key === "description"
-                        ? "w-48 max-w-[250px]"
-                        : col.key === "cvFile"
-                        ? "w-24"
-                        : col.key === "status"
-                        ? "w-24"
-                        : col.key === "action"
-                        ? "w-32 min-w-[8rem]"
-                        : ""
-                    }`}
+                          ? "w-28"
+                          : col.key === "birthday"
+                            ? "w-28"
+                            : col.key === "gender"
+                              ? "w-20"
+                              : col.key === "description"
+                                ? "w-48 max-w-[250px]"
+                                : col.key === "cvFile"
+                                  ? "w-24"
+                                  : col.key === "status"
+                                    ? "w-24"
+                                    : col.key === "action"
+                                      ? "w-32 min-w-[8rem]"
+                                      : ""
+                      }`}
                   >
                     {col.label}
                   </th>
@@ -510,9 +518,8 @@ const TeacherApplication = () => {
             {applications.map((app, index) => (
               <tr
                 key={app.id || index}
-                className={`${
-                  index % 2 === 0 ? "bg-white" : "bg-slate-50"
-                } border-b border-slate-200 hover:bg-blue-50 transition-all duration-150`}
+                className={`${index % 2 === 0 ? "bg-white" : "bg-slate-50"
+                  } border-b border-slate-200 hover:bg-blue-50 transition-all duration-150`}
               >
                 <td className="px-3 py-3 font-medium">{index + 1}</td>
                 <td className="px-3 py-3">
@@ -551,15 +558,14 @@ const TeacherApplication = () => {
                         ) : null
                       ) : col.key === "status" ? (
                         <span
-                          className={`inline-flex items-center px-2 py-0.5 text-xs font-semibold rounded-full ${
-                            app.accountStatus === "ACCEPT"
-                              ? "bg-emerald-100 text-emerald-600"
-                              : app.accountStatus === "REJECT"
+                          className={`inline-flex items-center px-2 py-0.5 text-xs font-semibold rounded-full ${app.accountStatus === "ACCEPT"
+                            ? "bg-emerald-100 text-emerald-600"
+                            : app.accountStatus === "REJECT"
                               ? "bg-rose-100 text-rose-600"
                               : app.accountStatus === "LOCKED"
-                              ? "bg-slate-100 text-slate-500"
-                              : "bg-amber-100 text-amber-600"
-                          }`}
+                                ? "bg-slate-100 text-slate-500"
+                                : "bg-amber-100 text-amber-600"
+                            }`}
                         >
                           {app.accountStatus}
                         </span>
@@ -568,16 +574,16 @@ const TeacherApplication = () => {
                           {app.gender === "MALE"
                             ? "Male"
                             : app.gender === "FEMALE"
-                            ? "Female"
-                            : "-"}
+                              ? "Female"
+                              : "-"}
                         </span>
                       ) : col.key === "birthday" ? (
                         <span>
                           {new Date(app.birthday).toLocaleDateString("en-GB")}
                         </span>
                       ) : ["userName", "email", "description"].includes(
-                          col.key
-                        ) ? (
+                        col.key
+                      ) ? (
                         (() => {
                           const raw = app[col.key as keyof typeof app];
                           const value = typeof raw === "string" ? raw : "";
@@ -585,11 +591,10 @@ const TeacherApplication = () => {
 
                           return (
                             <span
-                              className={`block max-w-[200px] whitespace-nowrap overflow-hidden text-ellipsis ${
-                                isLong
-                                  ? "cursor-pointer hover:underline hover:text-blue-600"
-                                  : ""
-                              }`}
+                              className={`block max-w-[200px] whitespace-nowrap overflow-hidden text-ellipsis ${isLong
+                                ? "cursor-pointer hover:underline hover:text-blue-600"
+                                : ""
+                                }`}
                               title={value}
                               onClick={() => {
                                 if (isLong) {

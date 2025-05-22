@@ -49,7 +49,11 @@ const CourseDetails: React.FC = () => {
   useEffect(() => {
     fetch(BASE_URL_COURSE_SERVICE + "/get-all-categories", {
       credentials: 'include',
-      method: "GET"
+      method: "GET",
+      headers: {
+        Authorization: "Bearer " + window.localStorage.getItem("access_token"),
+
+      }
     }).then(res => res.json())
       .then(data => setCategories(data.data))
   }, [])
@@ -140,6 +144,10 @@ const CourseDetails: React.FC = () => {
       const res = await fetch(BASE_URL_COURSE_SERVICE + "/add-course", {
         method: "POST",
         credentials: "include",
+        headers: {
+          Authorization: "Bearer " + window.localStorage.getItem("access_token"),
+
+        },
         body: formData,
       });
       if (!res.ok) {
@@ -147,7 +155,7 @@ const CourseDetails: React.FC = () => {
         throw new Error(data.message || "Failed to create course");
       }
       alert("Course created successfully!");
-      window.location.href="/teacher/courses"
+      window.location.href = "/teacher/courses"
       // TODO: redirect or reset form
     } catch (err: any) {
       setServerError(err.message);
@@ -167,13 +175,13 @@ const CourseDetails: React.FC = () => {
           >⬅️ Back</button>
           <div>
             <button
-              onClick={(e) => { handleSubmit(e,"OPEN" ) }}
+              onClick={(e) => { handleSubmit(e, "OPEN") }}
               className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
             >
               Publish
             </button>
             <button
-              onClick={(e) => { handleSubmit(e, "DRAFT")}}
+              onClick={(e) => { handleSubmit(e, "DRAFT") }}
               className="bg-gray-700 text-white px-4 py-2 rounded hover:bg-blue-700 ml-10"
             >
               Draft

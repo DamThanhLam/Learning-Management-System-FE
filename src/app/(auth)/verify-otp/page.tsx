@@ -2,7 +2,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { CheckCircleIcon } from '@heroicons/react/24/solid';
-import { BASE_URL_USER_SERVICE } from '@/utils/BaseURL';
+import { BASE_URL_AUTH_SERVICE } from '@/utils/BaseURL';
+import { checkLogin } from '@/utils/API';
 
 const OTP_LENGTH = 6;
 const RESEND_TIMEOUT = 60; // seconds
@@ -16,7 +17,11 @@ const VerifyOtp: React.FC = () => {
   const [resendCounter, setResendCounter] = useState(0);
 
   const inputsRef = useRef([]);
-
+  useEffect(() => {
+    checkLogin().then(data => {
+      window.location.href = "/"
+    })
+  }, [])
   // Load email + send OTP on mount
   useEffect(() => {
     const stored = localStorage.getItem('email');
@@ -39,7 +44,7 @@ const VerifyOtp: React.FC = () => {
     try {
       setLoadingSend(true);
       setMessage('');
-      const res = await axios.get(`${BASE_URL_USER_SERVICE}/send-otp`, {
+      const res = await axios.get(`${BASE_URL_AUTH_SERVICE}/send-otp`, {
         params: { email: mail },
         withCredentials: true,
       });
@@ -104,7 +109,7 @@ const VerifyOtp: React.FC = () => {
       setLoadingVerify(true);
       setMessage('');
       const res = await axios.post(
-        `${BASE_URL_USER_SERVICE}/verify-otp`,
+        `${BASE_URL_AUTH_SERVICE}/verify-otp`,
         { email, code },
         { withCredentials: true }
       );
@@ -178,8 +183,8 @@ const VerifyOtp: React.FC = () => {
             {loadingSend
               ? 'Sending...'
               : resendCounter > 0
-              ? `Resend in ${resendCounter}s`
-              : 'Resend Code'}
+                ? `Resend in ${resendCounter}s`
+                : 'Resend Code'}
           </button>
         </div>
       </div>

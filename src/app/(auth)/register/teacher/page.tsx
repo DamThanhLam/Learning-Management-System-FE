@@ -1,8 +1,9 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import { BASE_URL_TEACHER_MANAGEMENT_SERVICE } from "@/utils/BaseURL";
+import { checkLogin } from "@/utils/API";
 
 const FeedbackForm = () => {
   const [formData, setFormData] = useState({
@@ -15,7 +16,11 @@ const FeedbackForm = () => {
     faceImage: null as File | null,
     cvFile: null as File | null,
   });
-
+  useEffect(() => {
+    checkLogin().then(data => {
+      window.location.href = "/"
+    })
+  }, [])
   const handleInputChange = (
     e: React.ChangeEvent<
       HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
@@ -51,7 +56,7 @@ const FeedbackForm = () => {
 
     try {
       const response = await fetch(
-        BASE_URL_TEACHER_MANAGEMENT_SERVICE+"/require-create-teacher-account",
+        BASE_URL_TEACHER_MANAGEMENT_SERVICE + "/require-create-teacher-account",
         {
           method: "POST",
           body: form,

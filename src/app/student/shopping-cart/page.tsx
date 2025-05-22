@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { BASE_URL_COURSE_SERVICE } from '@/utils/BaseURL'
 import { useRouter } from 'next/navigation'
+import { checkLogin } from '@/utils/API'
 
 export default function ShoppingCart() {
   // Sample data for cart items
@@ -21,10 +22,19 @@ export default function ShoppingCart() {
   // State to manage cart items
   const [cartItems, setCartItems] = useState([])
   useEffect(() => {
+    checkLogin().then(data => {
+    }).catch(e => {
+      window.location.href = "/login"
+
+    })
+  }, [])
+  useEffect(() => {
     fetch(BASE_URL_COURSE_SERVICE + '/shopping-cart', {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
+        Authorization: "Bearer " + window.localStorage.getItem("access_token"),
+
         Accept: 'application/json'
       },
       credentials: 'include'
@@ -41,6 +51,8 @@ export default function ShoppingCart() {
       method: 'DELETE',
       headers: {
         'Content-Type': 'application/json',
+        Authorization: "Bearer " + window.localStorage.getItem("access_token"),
+
         Accept: 'application/json'
       },
       credentials: 'include',

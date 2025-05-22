@@ -16,13 +16,20 @@ import {
 } from 'recharts'
 import Sidebar from '@/components/teacher/Sidebar'
 import { BASE_URL_COURSE_SERVICE, BASE_URL_STATISTICAL_SERVICE } from '@/utils/BaseURL'
+import { checkLogin } from '@/utils/API'
 
 export default function Dashboard() {
     const [year] = useState(new Date().getFullYear())
     const [salesData, setSalesData] = useState([])
     const [topCourses, setTopCourses] = useState([])
     const [loading, setLoading] = useState(true)
+    useEffect(() => {
+        checkLogin().then(data => {
+        }).catch(e => {
+            window.location.href = "/login"
 
+        })
+    }, [])
     useEffect(() => {
         async function fetchData() {
             setLoading(true)
@@ -30,7 +37,13 @@ export default function Dashboard() {
                 // Lấy dữ liệu doanh thu theo tháng
                 const respSales = await fetch(
                     `${BASE_URL_STATISTICAL_SERVICE}/life-time-sales?year=${year}`,
-                    { credentials: 'include' }
+                    {
+                        credentials: 'include',
+                        headers: {
+                            Authorization: "Bearer " + window.localStorage.getItem("refresh_token"),
+
+                        }
+                    }
                 )
                 const jsonSales = await respSales.json()
                 const formattedSales = Array.from({ length: 12 }, (_, i) => ({
@@ -43,7 +56,13 @@ export default function Dashboard() {
                 const size = 6
                 const respCourses = await fetch(
                     `${BASE_URL_COURSE_SERVICE}/top-my-courses?size=${size}`,
-                    { credentials: 'include' }
+                    {
+                        credentials: 'include',
+                        headers: {
+                            Authorization: "Bearer " + window.localStorage.getItem("refresh_token"),
+
+                        }
+                    }
                 )
                 const jsonCourses = await respCourses.json()
                 setTopCourses(jsonCourses.data)

@@ -32,12 +32,23 @@ export default function TeacherPayoutPage() {
 
   useEffect(() => {
     // fetch teacher info
-    axios.get(BASE_URL_USER_SERVICE + "/own", { withCredentials: true }).then(res => {
+    axios.get(BASE_URL_USER_SERVICE + "/own", {
+      withCredentials: true, headers: {
+        Authorization: "Bearer " + window.localStorage.getItem("access_token"),
+
+      }
+    }).then(res => {
       setBalance(res.data.user.balance || 0);
       setEmail(res.data.user.email || "");
     });
     // fetch payout history
-    axios.get(BASE_URL_PAYMENT_SERVICE + "/teacher/require-payout", { withCredentials: true })
+    axios.get(BASE_URL_PAYMENT_SERVICE + "/teacher/require-payout", {
+      withCredentials: true,
+      headers: {
+        Authorization: "Bearer " + window.localStorage.getItem("access_token"),
+
+      }
+    })
       .then(res => {
         const raw: any[] = res.data.data || [];
         const mapped: PayoutHistoryItem[] = raw.map(item => ({
@@ -60,7 +71,13 @@ export default function TeacherPayoutPage() {
       await axios.post(
         BASE_URL_PAYMENT_SERVICE + "/teacher/require-payout",
         { emailPaypal: email, amount },
-        { withCredentials: true }
+        {
+          withCredentials: true,
+          headers: {
+            Authorization: "Bearer " + window.localStorage.getItem("access_token"),
+
+          }
+        }
       );
       await reload()
 
@@ -74,11 +91,21 @@ export default function TeacherPayoutPage() {
   };
   const reload = async () => {
     // refresh profile and history
-    axios.get(BASE_URL_USER_SERVICE + "/own", { withCredentials: true }).then(res => {
+    axios.get(BASE_URL_USER_SERVICE + "/own", {
+      withCredentials: true, headers: {
+        Authorization: "Bearer " + window.localStorage.getItem("access_token"),
+
+      }
+    }).then(res => {
       setBalance(res.data.user.balance || 0);
       setEmail(res.data.user.email || "");
     });
-    axios.get(BASE_URL_PAYMENT_SERVICE + "/teacher/require-payout", { withCredentials: true })
+    axios.get(BASE_URL_PAYMENT_SERVICE + "/teacher/require-payout", {
+      withCredentials: true, headers: {
+        Authorization: "Bearer " + window.localStorage.getItem("access_token"),
+
+      }
+    })
       .then(res => {
         const raw: any[] = res.data.data || [];
         const mapped: PayoutHistoryItem[] = raw.map(item => ({
@@ -93,7 +120,12 @@ export default function TeacherPayoutPage() {
   const handleCancelRequire = async (requireId: string) => {
     await axios.get(
       BASE_URL_PAYMENT_SERVICE + "/teacher/cancel-require-payout?requireId=" + requireId,
-      { withCredentials: true }
+      {
+        withCredentials: true, headers: {
+          Authorization: "Bearer " + window.localStorage.getItem("access_token"),
+
+        }
+      }
     );
     await reload();
 

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { User } from "@/types/User";
+import { BASE_URL_USER_SERVICE } from "@/utils/BaseURL";
 
 export default function ProfileComponent() {
   const [user, setUser] = useState<User | null>(null);
@@ -22,9 +23,13 @@ export default function ProfileComponent() {
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
 
   useEffect(() => {
-    fetch("http://localhost:8080/api/v1/user/own", {
+    fetch(BASE_URL_USER_SERVICE + "/own", {
       method: "GET",
       credentials: "include",
+      headers: {
+        Authorization: "Bearer " + window.localStorage.getItem("refresh_token"),
+
+      }
     })
       .then((res) => res.json())
       .then((data) => {
@@ -53,10 +58,14 @@ export default function ProfileComponent() {
     if (formData.cvFile) form.append("cvFile", formData.cvFile);
 
     try {
-      const response = await fetch("http://localhost:8080/api/v1/user", {
+      const response = await fetch(BASE_URL_USER_SERVICE, {
         method: "PUT",
         credentials: "include",
         body: form,
+        headers: {
+          Authorization: "Bearer " + window.localStorage.getItem("refresh_token"),
+
+        }
       });
 
       if (response.status === 204) {

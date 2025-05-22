@@ -62,6 +62,8 @@ export default function ProfilePage() {
       const response = await axios.get(`${BASE_URL_USER_SERVICE}/own`, {
         headers: {
           'Content-Type': 'application/json',
+          Authorization: "Bearer " + window.localStorage.getItem("access_token"),
+
           Accept: 'application/json'
         },
         withCredentials: true
@@ -170,7 +172,9 @@ export default function ProfilePage() {
 
       const response = await axios.put(`${BASE_URL_USER_SERVICE}`, formData, {
         headers: {
-          'Content-Type': 'multipart/form-data'
+          'Content-Type': 'multipart/form-data',
+          Authorization: "Bearer " + window.localStorage.getItem("access_token"),
+
         },
         withCredentials: true
       })

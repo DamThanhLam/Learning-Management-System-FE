@@ -32,6 +32,10 @@ export default function ProfilePage() {
       try {
         const res = await fetch(`${BASE_URL_USER_SERVICE}/own`, {
           credentials: "include",
+          headers: {
+            Authorization: "Bearer " + window.localStorage.getItem("access_token"),
+
+          }
         });
         const body = await res.json();
         if (body.code === 200 && body.user) {
@@ -104,6 +108,10 @@ export default function ProfilePage() {
         method: "PUT",
         credentials: "include",
         body: form,
+        headers: {
+          Authorization: "Bearer " + window.localStorage.getItem("access_token"),
+
+        }
       });
       const body = await res.json();
       if (body.status === "success") {

@@ -4,7 +4,6 @@ import { useEffect, useState } from 'react'
 import Image from 'next/image'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { BASE_URL_COURSE_SERVICE, BASE_URL_PAYMENT_SERVICE } from '@/utils/BaseURL'
-import { refreshToken } from '@/utils/API'
 
 export default function CheckoutPage() {
   const router = useRouter()
@@ -24,29 +23,33 @@ export default function CheckoutPage() {
   const searchParams = useSearchParams()
   const idsParam = searchParams.get('courseIds')
   useEffect(() => {
-    refreshToken().then(() => {
-      const idsArray = searchParams.get('courseIds')?.split(',') || []
-      // 1) Build an array of fetch-promises
-      const promises = idsArray.map((id) => fetch(`${BASE_URL_COURSE_SERVICE}?id=${id}`).then((res) => res.json()))
 
-      // 2) Wait for them all, then update state exactly once
-      Promise.all(promises)
-        .then((results) => {
-          // each result is the parsed JSON, e.g. { data: { price, ... } }
-          const courseData = results.map((r) => r?.data).filter(Boolean) // <-- filter out undefined/null
+    const idsArray = searchParams.get('courseIds')?.split(',') || []
+    // 1) Build an array of fetch-promises
+    const promises = idsArray.map((id) => fetch(`${BASE_URL_COURSE_SERVICE}?id=${id}`, {
+      headers: {
+        Authorization: "Bearer " + window.localStorage.getItem("access_token"),
 
-          setCourses(courseData)
+      }
+    }).then((res) => res.json()))
 
-          const total = courseData.reduce((sum, c) => {
-            const p = Number(c.price)
-            return sum + (isNaN(p) ? 0 : p)
-          }, 0)
-          setPriceTotal(total)
-        })
-        .catch((err) => {
-          console.error('Error fetching courses:', err)
-        })
-    })
+    // 2) Wait for them all, then update state exactly once
+    Promise.all(promises)
+      .then((results) => {
+        // each result is the parsed JSON, e.g. { data: { price, ... } }
+        const courseData = results.map((r) => r?.data).filter(Boolean) // <-- filter out undefined/null
+
+        setCourses(courseData)
+
+        const total = courseData.reduce((sum, c) => {
+          const p = Number(c.price)
+          return sum + (isNaN(p) ? 0 : p)
+        }, 0)
+        setPriceTotal(total)
+      })
+      .catch((err) => {
+        console.error('Error fetching courses:', err)
+      })
   }, [idsParam])
 
   const handleTabClick = (tab: string) => {
@@ -59,13 +62,14 @@ export default function CheckoutPage() {
   }
 
   const handleCheckout = async () => {
-    await refreshToken()
 
     const idsArray = searchParams.get('courseIds')?.split(',') || []
     fetch(BASE_URL_PAYMENT_SERVICE + '/submitOrder', {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        Authorization: "Bearer " + window.localStorage.getItem("access_token"),
+
       },
       credentials: 'include',
       body: JSON.stringify({ courseIds: idsArray, orderInfo: 'AA' })

@@ -30,7 +30,11 @@ export default function Navbar() {
 
   useEffect(() => {
     fetch(BASE_URL_USER_SERVICE + "/own", {
-      credentials: "include"
+      credentials: "include",
+      headers: {
+        Authorization: "Bearer " + window.localStorage.getItem("access_token"),
+
+      }
     }).then(res => res.json())
       .then(data => {
 

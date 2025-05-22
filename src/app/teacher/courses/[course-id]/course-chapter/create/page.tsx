@@ -93,7 +93,7 @@ export default function ChapterManagement() {
       const sizeMB = file.size / (1024 * 1024);
       switch (type) {
         case 'File':
-          if (!['text/plain','application/pdf','application/msword','application/vnd.openxmlformats-officedocument.wordprocessingml.document'].includes(file.type)) {
+          if (!['text/plain', 'application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'].includes(file.type)) {
             error = 'Only TXT, PDF, DOC/DOCX allowed';
           } else if (sizeMB > 15) {
             error = 'Max size 15MB';
@@ -131,7 +131,7 @@ export default function ChapterManagement() {
     // if publishing, require file, video, thumbnail
     if (status === 'PUBLISHED') {
       (Object.keys(resources) as ResourceType[]).forEach(type => {
-        if(type !== "File") return
+        if (type !== "File") return
         if (!resources[type].file) {
           setResources(prev => ({
             ...prev,
@@ -162,7 +162,13 @@ export default function ChapterManagement() {
 
       const res = await fetch(
         `${BASE_URL_LECTURE_SERVICE}/courses/${courseId}/lectures`,
-        { method: 'POST', body: formData, credentials: 'include' }
+        {
+          method: 'POST', body: formData, credentials: 'include',
+          headers: {
+            Authorization: "Bearer " + window.localStorage.getItem("access_token"),
+
+          }
+        }
       );
       if (!res.ok) throw new Error('Add chapter failed');
       alert('Chapter added successfully');
@@ -261,7 +267,7 @@ export default function ChapterManagement() {
               const { file, error } = resources[type];
               return (
                 <div key={type} className="border p-4 rounded bg-gray-50">
-                  <label className="font-medium block mb-2">{type}{type==="File"?"*":""}</label>
+                  <label className="font-medium block mb-2">{type}{type === "File" ? "*" : ""}</label>
                   <div
                     onDrop={handleDrop(type)}
                     onDragOver={handleDragOver}
@@ -280,8 +286,8 @@ export default function ChapterManagement() {
                         type === 'File'
                           ? '.txt,.pdf,.doc,.docx'
                           : type === 'Video'
-                          ? '.mp4,.mov'
-                          : '.jpeg,.jpg,.png'
+                            ? '.mp4,.mov'
+                            : '.jpeg,.jpg,.png'
                       }
                       className="hidden"
                       onChange={handleFileSelect(type)}

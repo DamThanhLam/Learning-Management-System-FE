@@ -18,7 +18,11 @@ const Sidebar: React.FC<SidebarProps> = ({ pathname }) => {
   // Fetch user info
   useEffect(() => {
     fetch(BASE_URL_USER_SERVICE + '/own', {
-      credentials: "include"
+      credentials: "include",
+      headers: {
+        Authorization: "Bearer " + window.localStorage.getItem("access_token"),
+
+      }
     })
       .then(res => res.json())
       .then(data => {
@@ -39,22 +43,11 @@ const Sidebar: React.FC<SidebarProps> = ({ pathname }) => {
     };
   }, []);
 
- const handleLogout = async () => {
-  try {
-    const res = await fetch(`${BASE_URL_USER_SERVICE}/logout`, {
-      credentials: 'include',
-    });
-
-    if (!res.ok) {
-      console.warn('Logout failed, status:', res.status);
-    }
-  } catch (err) {
-    console.error('Error when logging out:', err);
-  } finally {
+  const handleLogout = async () => {
+    window.localStorage.clear()
     // Chuyển về trang login bất kể kết quả
     window.location.href = '/login';
-  }
-};
+  };
 
   return (
     <div className="w-1/5 h-screen bg-gray-900 text-white flex flex-col justify-between">

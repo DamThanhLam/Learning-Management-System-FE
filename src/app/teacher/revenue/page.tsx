@@ -48,7 +48,13 @@ export default function Revenue() {
         const to = formatDate(endDate);
         const resp = await fetch(
           `${BASE_URL_STATISTICAL_SERVICE}/orders?from=${from}&to=${to}`,
-          { credentials: 'include' }
+          {
+            credentials: 'include',
+            headers: {
+              Authorization: "Bearer " + window.localStorage.getItem("access_token"),
+
+            }
+          }
         );
         if (!resp.ok) throw new Error('Network response was not ok');
         const data = await resp.json();
@@ -175,7 +181,7 @@ export default function Revenue() {
           >
             <option value="">All Status</option>
             {['SUCCESS', 'FAIL', 'ERROR', 'INITIAL'].map(s => (
-              <option key={s} value={s}>{s.charAt(0)+s.slice(1).toLowerCase()}</option>
+              <option key={s} value={s}>{s.charAt(0) + s.slice(1).toLowerCase()}</option>
             ))}
           </select>
           <input

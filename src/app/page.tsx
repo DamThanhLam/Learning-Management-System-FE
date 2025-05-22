@@ -8,44 +8,31 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { getAuth, isSignInWithEmailLink, signInWithEmailLink } from "firebase/auth";
 import { BASE_URL_USER_SERVICE } from "@/utils/BaseURL";
+import { checkLogin } from "@/utils/API";
 
 export default function RegisterChoice() {
     const router = useRouter();
     const [groups, setGroups] = useState<string[]>([]);
-    
-      
+    const [user, setUser] = useState<any>(null);
+
     useEffect(() => {
-        const cookieValue = document.cookie
-            .split("; ")
-            .find((row) => row.startsWith("groups="))
-            ?.split("=")[1];
+        checkLogin().then(data => {
+            console.log(data)
+            setUser(data.data)
+        }).catch(e => {
+            window.location.href = "/login"
 
-        if (cookieValue) {
-            try {
-                const decoded = decodeURIComponent(cookieValue);
-                const parsed = JSON.parse(decoded);
-                setGroups(parsed);
-                if(parsed.length === 1){
-                    router.push("/" + parsed[0].toLowerCase())
+        })
 
-                }
-                console.log("Nhóm quyền:", parsed);
-            } catch (e) {
-                console.error("Lỗi khi đọc cookie groups:", e);
-            }
+    }, [])
+    useEffect(() => {
+        if (!user) return;
+        setGroups(user.groups)
+        if (!user.verifiedEmail) {
+            window.location.href = "/verify-otp"
         }
 
-        fetch(BASE_URL_USER_SERVICE+"/own",{
-            credentials:"include"
-        })
-        .then(res => res.json())
-        .then(data=>{
-            if(!data.user || !data.user.verifiedEmail){
-                window.location.href="/verify-otp"
-            }
-        })
-        
-    }, []);
+    }, [user]);
 
     return (
         <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 p-6">

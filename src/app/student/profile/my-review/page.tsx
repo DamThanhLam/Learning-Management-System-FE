@@ -63,6 +63,8 @@ export default function MyReviewsPage() {
         },
         headers: {
           'Content-Type': 'application/json',
+          Authorization: "Bearer " + window.localStorage.getItem("access_token"),
+
           Accept: 'application/json'
         },
         withCredentials: true
@@ -103,6 +105,7 @@ export default function MyReviewsPage() {
         },
         headers: {
           'Content-Type': 'application/json',
+          Authorization: "Bearer " + window.localStorage.getItem("access_token"),
           Accept: 'application/json'
         },
         withCredentials: true
@@ -202,9 +205,8 @@ export default function MyReviewsPage() {
           {myCourses.map((course) => (
             <div
               key={course.id}
-              className={`p-4 rounded-lg border-2 transition-all cursor-pointer ${
-                selectedCourseId === course.id ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-blue-300'
-              }`}
+              className={`p-4 rounded-lg border-2 transition-all cursor-pointer ${selectedCourseId === course.id ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-blue-300'
+                }`}
               onClick={() => setSelectedCourseId(course.id)}>
               <div className="flex items-center space-x-4">
                 <div className="relative w-16 h-16 rounded-full overflow-hidden">

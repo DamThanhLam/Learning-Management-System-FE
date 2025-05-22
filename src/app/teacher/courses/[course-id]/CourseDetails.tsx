@@ -43,25 +43,29 @@ const CourseDetails: React.FC = () => {
   const [courseName, setCourseName] = useState("");
   const [coursePrice, setCoursePrice] = useState("");
   const [category, setCategory] = useState("");
-  const [level, setLevel] = useState<"BEGINNER"|"MIDDLE"|"MASTER">("BEGINNER");
+  const [level, setLevel] = useState<"BEGINNER" | "MIDDLE" | "MASTER">("BEGINNER");
   const [description, setDescription] = useState("");
-  const [status, setStatus] = useState<"OPEN"|"DRAFT">("OPEN");
+  const [status, setStatus] = useState<"OPEN" | "DRAFT">("OPEN");
   const [introImage, setIntroImage] = useState<string | null>(null);
   const [introImageFile, setIntroImageFile] = useState<File | null>(null);
   const [introVideo, setIntroVideo] = useState<string | null>(null);
   const [introVideoFile, setIntroVideoFile] = useState<File | null>(null);
-  const [errors, setErrors] = useState<Record<string,string>>({});
-  const [serverError, setServerError] = useState<string|null>(null);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [serverError, setServerError] = useState<string | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const videoInputRef = useRef<HTMLInputElement>(null);
   const MAX_IMAGE_SIZE = 5 * 1024 * 1024;
   const MAX_VIDEO_SIZE = 50 * 1024 * 1024;
-  const ALLOWED_VIDEO_TYPES = ["video/mp4","video/quicktime","video/webm"];
+  const ALLOWED_VIDEO_TYPES = ["video/mp4", "video/quicktime", "video/webm"];
 
   // --- Fetch categories + course details ---
   useEffect(() => {
     fetch(BASE_URL_COURSE_SERVICE + "/get-all-categories", {
+      headers: {
+        Authorization: "Bearer " + window.localStorage.getItem("access_token"),
+
+      },
       credentials: "include",
     })
       .then(res => res.json())
@@ -69,6 +73,10 @@ const CourseDetails: React.FC = () => {
       .catch(console.error);
 
     fetch(BASE_URL_COURSE_SERVICE + "?id=" + courseId, {
+      headers: {
+        Authorization: "Bearer " + window.localStorage.getItem("access_token"),
+
+      },
       credentials: "include",
     })
       .then(res => res.json())
@@ -89,17 +97,17 @@ const CourseDetails: React.FC = () => {
 
   // --- Handlers for image/video (giống add UI) ---
   const handleImageFile = (file: File) => {
-    if (!["image/jpeg","image/png"].includes(file.type)) {
-      setErrors(e => ({...e, introImage: "Chỉ JPEG hoặc PNG."}));
+    if (!["image/jpeg", "image/png"].includes(file.type)) {
+      setErrors(e => ({ ...e, introImage: "Chỉ JPEG hoặc PNG." }));
       return;
     }
     if (file.size > MAX_IMAGE_SIZE) {
-      setErrors(e => ({...e, introImage: "Kích thước ≤5MB."}));
+      setErrors(e => ({ ...e, introImage: "Kích thước ≤5MB." }));
       return;
     }
     setIntroImage(URL.createObjectURL(file));
     setIntroImageFile(file);
-    setErrors(e => { const {introImage,...rest}=e; return rest; });
+    setErrors(e => { const { introImage, ...rest } = e; return rest; });
   };
   const handleDropImage = (e: DragEvent<HTMLDivElement>) => {
     e.preventDefault();
@@ -111,16 +119,16 @@ const CourseDetails: React.FC = () => {
 
   const handleVideoFile = (file: File) => {
     if (!ALLOWED_VIDEO_TYPES.includes(file.type)) {
-      setErrors(e => ({...e, introVideo: "Chỉ MP4/MOV/WEBM."}));
+      setErrors(e => ({ ...e, introVideo: "Chỉ MP4/MOV/WEBM." }));
       return;
     }
     if (file.size > MAX_VIDEO_SIZE) {
-      setErrors(e => ({...e, introVideo: "Kích thước ≤50MB."}));
+      setErrors(e => ({ ...e, introVideo: "Kích thước ≤50MB." }));
       return;
     }
     setIntroVideo(URL.createObjectURL(file));
     setIntroVideoFile(file);
-    setErrors(e => { const {introVideo,...rest}=e; return rest; });
+    setErrors(e => { const { introVideo, ...rest } = e; return rest; });
   };
   const handleDropVideo = (e: DragEvent<HTMLDivElement>) => {
     e.preventDefault();
@@ -131,11 +139,11 @@ const CourseDetails: React.FC = () => {
   };
 
   // --- Submit handler chung ---
-  const handleSubmit = async (e: FormEvent, submitStatus: "OPEN"|"DRAFT") => {
+  const handleSubmit = async (e: FormEvent, submitStatus: "OPEN" | "DRAFT") => {
     e.preventDefault();
-    const newErr: Record<string,string> = {};
+    const newErr: Record<string, string> = {};
     if (!courseName.trim()) newErr.courseName = "Tên khóa học bắt buộc";
-    if (!coursePrice || isNaN(Number(coursePrice)) || Number(coursePrice)<=0)
+    if (!coursePrice || isNaN(Number(coursePrice)) || Number(coursePrice) <= 0)
       newErr.coursePrice = "Giá phải >0";
     if (!category) newErr.category = "Chọn category";
     if (!level) newErr.level = "Chọn level";
@@ -164,6 +172,10 @@ const CourseDetails: React.FC = () => {
           method: "PUT",
           credentials: "include",
           body: formData,
+          headers: {
+            Authorization: "Bearer " + window.localStorage.getItem("access_token"),
+
+          }
         }
       );
       if (!res.ok) {
