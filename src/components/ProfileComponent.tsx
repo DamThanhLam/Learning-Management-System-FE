@@ -28,8 +28,7 @@ export default function ProfileComponent() {
       credentials: "include",
       headers: {
         Authorization: "Bearer " + window.localStorage.getItem("refresh_token"),
-
-      }
+      },
     })
       .then((res) => res.json())
       .then((data) => {
@@ -63,9 +62,9 @@ export default function ProfileComponent() {
         credentials: "include",
         body: form,
         headers: {
-          Authorization: "Bearer " + window.localStorage.getItem("refresh_token"),
-
-        }
+          Authorization:
+            "Bearer " + window.localStorage.getItem("refresh_token"),
+        },
       });
 
       if (response.status === 204) {
@@ -323,12 +322,15 @@ export default function ProfileComponent() {
                 </button>
               )}
 
-              <Link
-                href="/signout"
+              <button
+                onClick={() => {
+                  localStorage.clear(); // hoặc localStorage.removeItem('token')
+                  window.location.reload(); // hoặc dùng router.push nếu muốn điều hướng
+                }}
                 className="w-full bg-red-500 hover:bg-red-600 text-white text-center py-2 rounded-lg transition"
               >
                 Sign Out
-              </Link>
+              </button>
             </div>
           </div>
         </div>
