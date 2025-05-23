@@ -7,6 +7,7 @@ import axios from 'axios'
 import { BASE_URL_COURSE_SERVICE } from '@/utils/BaseURL'
 import StudentCourseCard from './StudentCourseCard'
 import { log } from 'console'
+import { useSearchParams } from 'next/navigation'
 
 interface Course {
   id: string
@@ -27,8 +28,11 @@ interface APIResponse {
 }
 
 export default function StudentCourseGrid() {
+  const searchParams = useSearchParams()
+  const initialCategory = searchParams.get('category') || null
+
   const [isOpen, setIsOpen] = useState(false)
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(initialCategory)
   const [selectedRating, setSelectedRating] = useState<number | null>(null)
   const [sortOrder, setSortOrder] = useState<string>('price')
   const [currentPage, setCurrentPage] = useState(1)
@@ -200,15 +204,19 @@ export default function StudentCourseGrid() {
         <h2 className="text-lg font-bold mb-4">Courses</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {currentCourses.map((course) => {
-            console.log('Course being passed to StudentCourseCard:', course) // Log the course object
-
+            // Calculate average review
+            let avgReview = 0
+            if (typeof course.totalReview === 'number' && typeof course.countReviews === 'number' && course.countReviews > 0) {
+              avgReview = course.totalReview / course.countReviews
+            }
+            // Always pass a number!
             return (
               <Link key={course.id} href={`/student/courses/${course.id}`} className="block hover:shadow-lg transition-shadow duration-200">
                 <StudentCourseCard
                   courseName={course.courseName}
                   category={course.category}
                   price={course.price}
-                  totalReview={course.totalReview}
+                  totalReview={isNaN(avgReview) || !isFinite(avgReview) ? 0 : avgReview}
                   countReviews={course.countReviews}
                   urlAvt={course.urlAvt}
                   teacherName={course.teacherName}

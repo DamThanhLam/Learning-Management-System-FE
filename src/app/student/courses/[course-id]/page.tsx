@@ -64,7 +64,7 @@ export default function CourseDetailsPage({ params }: { params: Promise<{ 'cours
           method: 'GET',
           credentials: 'include',
           headers: {
-            Authorization: "Bearer " + window.localStorage.getItem("refresh_token"),
+            Authorization: 'Bearer ' + window.localStorage.getItem('refresh_token')
           }
         })
 
@@ -97,7 +97,7 @@ export default function CourseDetailsPage({ params }: { params: Promise<{ 'cours
       const response = await fetch(`${BASE_URL_COURSE_SERVICE}/check-course-purchase?courseId=${courseId}`, {
         method: 'GET',
         headers: {
-          Authorization: "Bearer " + window.localStorage.getItem("refresh_token"),
+          Authorization: 'Bearer ' + window.localStorage.getItem('refresh_token')
         },
         credentials: 'include' // Include cookies for authentication
       })
@@ -120,7 +120,7 @@ export default function CourseDetailsPage({ params }: { params: Promise<{ 'cours
       const response = await fetch(`${BASE_URL_USER_SERVICE}?id=${teacherId}`, {
         method: 'GET',
         headers: {
-          Authorization: "Bearer " + window.localStorage.getItem("refresh_token"),
+          Authorization: 'Bearer ' + window.localStorage.getItem('refresh_token')
         },
         credentials: 'include'
       })
@@ -147,7 +147,7 @@ export default function CourseDetailsPage({ params }: { params: Promise<{ 'cours
         const response = await fetch(`${BASE_URL_REVIEW_SERVICE}/get-reviews-by-courseId?courseId=${courseId}`, {
           method: 'GET',
           headers: {
-            Authorization: "Bearer " + window.localStorage.getItem("refresh_token"),
+            Authorization: 'Bearer ' + window.localStorage.getItem('refresh_token')
           },
           credentials: 'include'
         })
@@ -250,7 +250,7 @@ export default function CourseDetailsPage({ params }: { params: Promise<{ 'cours
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: "Bearer " + window.localStorage.getItem("access_token"),
+          Authorization: 'Bearer ' + window.localStorage.getItem('access_token')
         },
         credentials: 'include',
         body: JSON.stringify({ courseId })
@@ -294,7 +294,8 @@ export default function CourseDetailsPage({ params }: { params: Promise<{ 'cours
             {/* Render the description with HTML tags */}
             <div className="text-xl text-gray-700 mb-3" dangerouslySetInnerHTML={{ __html: course.description }}></div>
             <p className="text-xl text-yellow-500 font-bold mb-3">
-              {(course.totalReview || 0).toFixed(1)} ★ ({course.countReviews || 0} ratings) | {course.countLectures || 0} Lectures | {course.level || 'N/A'}
+              {course.countReviews && course.countReviews > 0 ? (course.totalReview / course.countReviews).toFixed(1) : '0.0'} ★ ({course.countReviews || 0}{' '}
+              ratings) | {course.countLectures || 0} Lectures | {course.level || 'N/A'}
             </p>
           </div>
 

@@ -65,11 +65,21 @@ const Profile = () => {
           lastEvaluatedId
         })
         const apiUrl = `${BASE_URL_COURSE_SERVICE}/get-courses-of-teacher?${query}`
-        console.log('Fetching courses for teacher:', apiUrl) // Log the API request
+        console.log('Fetching courses for teacher:', apiUrl)
 
-        const response = await fetch(apiUrl, { credentials: 'include' })
+        // Get token and set headers if available
+        const token = window.localStorage.getItem('access_token')
+        const headers: Record<string, string> = {}
+        if (token) {
+          headers['Authorization'] = 'Bearer ' + token
+        }
+
+        const response = await fetch(apiUrl, {
+          credentials: 'include',
+          headers
+        })
         const data = await response.json()
-        console.log('Courses API response:', data) // Log the API response
+        console.log('Courses API response:', data)
 
         if (data.code === 200 && Array.isArray(data.data)) {
           setCourses(data.data)

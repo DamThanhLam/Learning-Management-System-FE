@@ -23,22 +23,24 @@ export default function CheckoutPage() {
   const searchParams = useSearchParams()
   const idsParam = searchParams.get('courseIds')
   useEffect(() => {
-
     const idsArray = searchParams.get('courseIds')?.split(',') || []
-    // 1) Build an array of fetch-promises
-    const promises = idsArray.map((id) => fetch(`${BASE_URL_COURSE_SERVICE}?id=${id}`, {
-      headers: {
-        Authorization: "Bearer " + window.localStorage.getItem("access_token"),
+    const token = window.localStorage.getItem('access_token')
+    const headers: Record<string, string> = {}
+    if (token) {
+      headers['Authorization'] = 'Bearer ' + token
+    }
 
-      }
-    }).then((res) => res.json()))
+    // 1) Build an array of fetch-promises
+    const promises = idsArray.map((id) =>
+      fetch(`${BASE_URL_COURSE_SERVICE}?id=${id}`, {
+        headers
+      }).then((res) => res.json())
+    )
 
     // 2) Wait for them all, then update state exactly once
     Promise.all(promises)
       .then((results) => {
-        // each result is the parsed JSON, e.g. { data: { price, ... } }
-        const courseData = results.map((r) => r?.data).filter(Boolean) // <-- filter out undefined/null
-
+        const courseData = results.map((r) => r?.data).filter(Boolean)
         setCourses(courseData)
 
         const total = courseData.reduce((sum, c) => {
@@ -62,21 +64,22 @@ export default function CheckoutPage() {
   }
 
   const handleCheckout = async () => {
-
     const idsArray = searchParams.get('courseIds')?.split(',') || []
+    const token = window.localStorage.getItem('access_token')
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json'
+    }
+    if (token) {
+      headers['Authorization'] = 'Bearer ' + token
+    }
+
     fetch(BASE_URL_PAYMENT_SERVICE + '/submitOrder', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: "Bearer " + window.localStorage.getItem("access_token"),
-
-      },
+      headers,
       credentials: 'include',
       body: JSON.stringify({ courseIds: idsArray, orderInfo: 'AA' })
     })
-      .then((res) => {
-        return res.json()
-      })
+      .then((res) => res.json())
       .then((data) => {
         if (data.code === 200) {
           window.location.href = data.urlPayment

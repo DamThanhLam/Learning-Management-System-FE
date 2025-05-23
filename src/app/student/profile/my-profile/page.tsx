@@ -50,13 +50,17 @@ export default function ProfilePage() {
   const fetchUserProfile = async () => {
     try {
       setLoading(true)
-      const response = await axios.get(`${BASE_URL_USER_SERVICE}/own`, {
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: "Bearer " + window.localStorage.getItem("access_token"),
+      const token = window.localStorage.getItem('access_token')
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+        Accept: 'application/json'
+      }
+      if (token) {
+        headers['Authorization'] = 'Bearer ' + token
+      }
 
-          Accept: 'application/json'
-        },
+      const response = await axios.get(`${BASE_URL_USER_SERVICE}/own`, {
+        headers,
         withCredentials: true
       })
 
@@ -144,12 +148,16 @@ export default function ProfilePage() {
         formData.append('imageAvt', avatarFile)
       }
 
-      const response = await axios.put(`${BASE_URL_USER_SERVICE}`, formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-          Authorization: "Bearer " + window.localStorage.getItem("access_token"),
+      const token = window.localStorage.getItem('access_token')
+      const headers: Record<string, string> = {
+        'Content-Type': 'multipart/form-data'
+      }
+      if (token) {
+        headers['Authorization'] = 'Bearer ' + token
+      }
 
-        },
+      const response = await axios.put(`${BASE_URL_USER_SERVICE}`, formData, {
+        headers,
         withCredentials: true
       })
 

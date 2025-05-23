@@ -1,21 +1,21 @@
 'use client'
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import TopTeacherCard from '@/components/teacher/TopTeacherCard'
+// import TopTeacherCard from '@/components/teacher/TopTeacherCard'
 import TopCourseCard from '@/components/course/TopCourseCard'
 import TopCategoryCard from '@/components/category/TopCategoryCard'
-import TopReviewCard from '@/components/review/TopReviewCard'
+// import TopReviewCard from '@/components/review/TopReviewCard'
 import { BASE_URL_COURSE_SERVICE } from '@/utils/BaseURL'
 import { useRouter } from 'next/navigation'
 import { checkLogin } from '@/utils/API'
 
 export default function HomePage() {
-  const stats = [
-    { value: '250+', description: 'Courses by our best mentors' },
-    { value: '1000+', description: 'Students enrolled' },
-    { value: '15+', description: 'Categories to explore' },
-    { value: '2400+', description: 'Hours of content' }
-  ]
+  // const stats = [
+  //   { value: '250+', description: 'Courses by our best mentors' },
+  //   { value: '1000+', description: 'Students enrolled' },
+  //   { value: '15+', description: 'Categories to explore' },
+  //   { value: '2400+', description: 'Hours of content' }
+  // ]
 
   const [categories, setCategories] = useState<string[]>([]) // State for categories
   const [loading, setLoading] = useState(true) // Loading state
@@ -38,6 +38,7 @@ export default function HomePage() {
         const data = await response.json()
         if (response.ok && data.code === 200) {
           setCategories(data.data || []) // Set categories from API response
+          console.log('Fetched categories:', data.data) // <-- Log categories here
         } else {
           throw new Error(data.message || 'Failed to fetch categories')
         }
@@ -52,11 +53,11 @@ export default function HomePage() {
     fetchCategories()
   }, [])
   useEffect(() => {
-    checkLogin().then(data => {
-    }).catch(e => {
-      window.location.href = "/login"
-
-    })
+    checkLogin()
+      .then((data) => {})
+      .catch((e) => {
+        window.location.href = '/login'
+      })
   }, [])
   // Fetch top courses from the backend
   useEffect(() => {
@@ -69,6 +70,7 @@ export default function HomePage() {
         const data = await response.json()
         if (response.ok && data.code === 200) {
           setCourses(data.data) // Set courses from API response
+          console.log('Fetched courses:', data.data) // <-- Log courses here
         } else {
           throw new Error(data.message || 'Failed to fetch courses')
         }
@@ -83,72 +85,72 @@ export default function HomePage() {
     fetchCourses()
   }, [])
 
-  const teachers = [
-    {
-      name: 'Ronald Richards',
-      expertise: 'UI/UX Designer',
-      overallReview: 4.9,
-      avaUrl: 'https://picsum.photos/96/96'
-    },
-    {
-      name: 'Jane Cooper',
-      expertise: 'Web Developer',
-      overallReview: 4.8,
-      avaUrl: 'https://picsum.photos/97/97'
-    },
-    {
-      name: 'John Doe',
-      expertise: 'Marketing Expert',
-      overallReview: 4.7,
-      avaUrl: 'https://picsum.photos/98/98'
-    },
-    {
-      name: 'Albert Einstein',
-      expertise: 'Physics Professor',
-      overallReview: 5.0,
-      avaUrl: 'https://picsum.photos/99/99'
-    },
-    {
-      name: 'Sarah Connor',
-      expertise: 'Product Designer',
-      overallReview: 4.6,
-      avaUrl: 'https://picsum.photos/100/100'
-    }
-  ]
+  // const teachers = [
+  //   {
+  //     name: 'Ronald Richards',
+  //     expertise: 'UI/UX Designer',
+  //     overallReview: 4.9,
+  //     avaUrl: 'https://picsum.photos/96/96'
+  //   },
+  //   {
+  //     name: 'Jane Cooper',
+  //     expertise: 'Web Developer',
+  //     overallReview: 4.8,
+  //     avaUrl: 'https://picsum.photos/97/97'
+  //   },
+  //   {
+  //     name: 'John Doe',
+  //     expertise: 'Marketing Expert',
+  //     overallReview: 4.7,
+  //     avaUrl: 'https://picsum.photos/98/98'
+  //   },
+  //   {
+  //     name: 'Albert Einstein',
+  //     expertise: 'Physics Professor',
+  //     overallReview: 5.0,
+  //     avaUrl: 'https://picsum.photos/99/99'
+  //   },
+  //   {
+  //     name: 'Sarah Connor',
+  //     expertise: 'Product Designer',
+  //     overallReview: 4.6,
+  //     avaUrl: 'https://picsum.photos/100/100'
+  //   }
+  // ]
 
-  const reviews = [
-    {
-      userName: 'Jane Doe',
-      content:
-        "Byway's tech courses are top-notch! As someone who's always looking to stay ahead in the rapidly evolving tech world, I appreciate the up-to-date content and engaging multimedia.",
-      avaUrl: 'https://picsum.photos/80/80'
-    },
-    {
-      userName: 'John Smith',
-      content: 'The courses are well-structured and easy to follow. I was able to learn new skills and apply them to my job immediately.',
-      avaUrl: 'https://picsum.photos/81/81'
-    },
-    {
-      userName: 'Alice Johnson',
-      content: 'I love the variety of courses available. The instructors are knowledgeable and the content is very practical.',
-      avaUrl: 'https://picsum.photos/82/82'
-    },
-    {
-      userName: 'Michael Brown',
-      content: 'The platform is user-friendly and the courses are very informative. Highly recommended!',
-      avaUrl: 'https://picsum.photos/83/83'
-    },
-    {
-      userName: 'Emily Davis',
-      content: 'I was able to learn at my own pace and the support from the instructors was amazing.',
-      avaUrl: 'https://picsum.photos/84/84'
-    },
-    {
-      userName: 'Chris Wilson',
-      content: 'The courses helped me improve my skills and land better projects. Thank you, Byway!',
-      avaUrl: 'https://picsum.photos/85/85'
-    }
-  ]
+  // const reviews = [
+  //   {
+  //     userName: 'Jane Doe',
+  //     content:
+  //       "Byway's tech courses are top-notch! As someone who's always looking to stay ahead in the rapidly evolving tech world, I appreciate the up-to-date content and engaging multimedia.",
+  //     avaUrl: 'https://picsum.photos/80/80'
+  //   },
+  //   {
+  //     userName: 'John Smith',
+  //     content: 'The courses are well-structured and easy to follow. I was able to learn new skills and apply them to my job immediately.',
+  //     avaUrl: 'https://picsum.photos/81/81'
+  //   },
+  //   {
+  //     userName: 'Alice Johnson',
+  //     content: 'I love the variety of courses available. The instructors are knowledgeable and the content is very practical.',
+  //     avaUrl: 'https://picsum.photos/82/82'
+  //   },
+  //   {
+  //     userName: 'Michael Brown',
+  //     content: 'The platform is user-friendly and the courses are very informative. Highly recommended!',
+  //     avaUrl: 'https://picsum.photos/83/83'
+  //   },
+  //   {
+  //     userName: 'Emily Davis',
+  //     content: 'I was able to learn at my own pace and the support from the instructors was amazing.',
+  //     avaUrl: 'https://picsum.photos/84/84'
+  //   },
+  //   {
+  //     userName: 'Chris Wilson',
+  //     content: 'The courses helped me improve my skills and land better projects. Thank you, Byway!',
+  //     avaUrl: 'https://picsum.photos/85/85'
+  //   }
+  // ]
   const [currentIndex, setCurrentIndex] = useState(0)
 
   const handleNext = () => {
@@ -201,7 +203,7 @@ export default function HomePage() {
       </section>
 
       {/* Stats Section */}
-      <section className="py-12 bg-white">
+      {/* <section className="py-12 bg-white">
         <div className="max-w-6xl mx-auto grid grid-cols-4 gap-6 text-center">
           {stats.map((stat, index) => (
             <div key={index}>
@@ -210,7 +212,7 @@ export default function HomePage() {
             </div>
           ))}
         </div>
-      </section>
+      </section> */}
 
       {/* Top Categories Section */}
       <section className="py-12 bg-gray-50">
@@ -267,18 +269,25 @@ export default function HomePage() {
             <p className="text-center text-red-500">{errorCourses}</p>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-              {courses.map((course: any, index) => (
-                <Link key={index} href={`/student/courses/` + course.id}>
-                  <TopCourseCard
-                    courseName={course.courseName}
-                    teacherName={course.teacherName}
-                    price={`$${course.price}`}
-                    overallReview={course.totalReview}
-                    countReviews={course.countReviews}
-                    avaUrl={course.urlAvt || 'https://picsum.photos/400/300'} // Fallback image
-                  />
-                </Link>
-              ))}
+              {courses.map((course: any, index) => {
+                let avgReview = 0
+                if (typeof course.totalReview === 'number' && typeof course.countReviews === 'number' && course.countReviews > 0) {
+                  avgReview = course.totalReview / course.countReviews
+                }
+                // Always pass a number!
+                return (
+                  <Link key={index} href={`/student/courses/` + course.id}>
+                    <TopCourseCard
+                      courseName={course.courseName}
+                      teacherName={course.teacherName}
+                      price={`$${course.price}`}
+                      overallReview={isNaN(avgReview) || !isFinite(avgReview) ? 0 : avgReview}
+                      countReviews={course.countReviews}
+                      avaUrl={course.urlAvt || 'https://picsum.photos/400/300'}
+                    />
+                  </Link>
+                )
+              })}
             </div>
           )}
         </div>

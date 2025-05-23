@@ -13,11 +13,17 @@ export default function ProfileLayout({ children }: { children: ReactNode }) {
   useEffect(() => {
     const fetchUserData = async () => {
       try {
+        const token = window.localStorage.getItem('access_token')
+        const headers: Record<string, string> = {
+          'Content-Type': 'application/json',
+          Accept: 'application/json'
+        }
+        if (token) {
+          headers['Authorization'] = 'Bearer ' + token
+        }
+
         const response = await axios.get(`${BASE_URL_USER_SERVICE}/own`, {
-          headers: {
-            'Content-Type': 'application/json',
-            Accept: 'application/json'
-          },
+          headers,
           withCredentials: true
         })
 
