@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import { BASE_URL_TEACHER_MANAGEMENT_SERVICE } from "@/utils/BaseURL";
 import { checkLogin } from "@/utils/API";
+import { useRouter } from "next/router";
 
 const FeedbackForm = () => {
   const [formData, setFormData] = useState({
@@ -16,11 +17,15 @@ const FeedbackForm = () => {
     faceImage: null as File | null,
     cvFile: null as File | null,
   });
+  const [facePreview, setFacePreview] = useState<string | null>(null);
+  const [cvFileName, setCvFileName] = useState<string | null>(null);
+  const router = useRouter();
+
   useEffect(() => {
-    checkLogin().then(data => {
-      window.location.href = "/"
-    })
-  }, [])
+    checkLogin().then((data) => {
+      window.location.href = "/";
+    });
+  }, []);
   const handleInputChange = (
     e: React.ChangeEvent<
       HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
@@ -33,7 +38,22 @@ const FeedbackForm = () => {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, files } = e.target;
     if (files && files.length > 0) {
-      setFormData((prev) => ({ ...prev, [name]: files[0] }));
+      const file = files[0];
+      setFormData((prev) => ({ ...prev, [name]: file }));
+
+      // Xử lý preview nếu là ảnh gương mặt
+      if (name === "faceImage") {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          setFacePreview(reader.result as string);
+        };
+        reader.readAsDataURL(file);
+      }
+
+      // Lưu tên file nếu là CV
+      if (name === "cvFile") {
+        setCvFileName(file.name);
+      }
     }
   };
 
@@ -65,6 +85,7 @@ const FeedbackForm = () => {
 
       if (response.ok) {
         alert("Submit thành công!");
+        router.push("/login");
       } else {
         const errorData = await response.json();
         alert(`Submit thất bại: ${errorData.message || "Unknown error"}`);
@@ -322,6 +343,22 @@ const FeedbackForm = () => {
           style={{ display: "none" }}
         />
 
+        {/* Hiển thị preview ảnh khuôn mặt */}
+        {facePreview && (
+          <div style={{ textAlign: "center", marginBottom: "16px" }}>
+            <img
+              src={facePreview}
+              alt="Face Preview"
+              style={{
+                maxWidth: "100%",
+                maxHeight: "200px",
+                borderRadius: "8px",
+                objectFit: "contain",
+              }}
+            />
+          </div>
+        )}
+
         {/* Upload CV */}
         <label htmlFor="cv-upload">
           <div
@@ -363,9 +400,6 @@ const FeedbackForm = () => {
             </p>
           </div>
         </label>
-        <div className="text-center">
-          <a href="/login" className="text-blue-600 text-center underline">You already have an account</a>
-        </div>
         <input
           id="cv-upload"
           name="cvFile"
@@ -373,6 +407,27 @@ const FeedbackForm = () => {
           onChange={handleFileChange}
           style={{ display: "none" }}
         />
+
+        {/* Hiển thị tên file CV */}
+        {cvFileName && (
+          <div
+            style={{
+              textAlign: "center",
+              color: "#4A5568",
+              fontSize: "14px",
+              marginBottom: "16px",
+            }}
+          >
+            Selected file: {cvFileName}
+          </div>
+        )}
+
+        {/* Link login */}
+        <div className="text-center">
+          <a href="/login" className="text-blue-600 underline">
+            You already have an account
+          </a>
+        </div>
 
         {/* Submit */}
         <button

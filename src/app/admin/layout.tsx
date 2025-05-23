@@ -11,7 +11,7 @@ const menuItems = [
   { name: "General", href: "/admin", icon: Home },
   { name: "Student", href: "/admin/users", icon: Users },
   { name: "Teacher", href: "/admin/teachers", icon: FileText },
-  // { name: "Billing", href: "/admin/billing", icon: FilePlus },
+  { name: "Billing", href: "/admin/billing", icon: FilePlus },
   // { name: "Feedback", href: "/admin/feedback", icon: FilePlus },
 ];
 

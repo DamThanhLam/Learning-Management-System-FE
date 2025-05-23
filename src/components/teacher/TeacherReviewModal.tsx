@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-
+import { BASE_URL_TEACHER_MANAGEMENT_SERVICE } from "@/utils/BaseURL";
 interface RequireAccount {
   id: string;
   userName: string;
@@ -62,12 +62,12 @@ const TeacherReviewModal = ({
       });
 
       const res = await fetch(
-        "http://localhost:8082/api/v1/teacher/decision-making-create-teacher-account",
+        BASE_URL_TEACHER_MANAGEMENT_SERVICE + "/decision-making-create-teacher-account",
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization: token ? `Bearer ${token}` : "",
+            Authorization: "Bearer " + window.localStorage.getItem("access_token"),
           },
           credentials: "include",
           body: JSON.stringify({
